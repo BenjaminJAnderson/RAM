@@ -28,6 +28,32 @@ def enhance_image(image, threshold=128):
 	plt.show()
 	return enhanced_image
 
+def img2point(image):
+	pixel_data = np.array(image)
+
+	# Get height and width of the image
+	height, width = pixel_data.shape
+
+	# Create lists to store x, y coordinates
+	x_coords = []
+	y_coords = []
+
+	# Iterate through each pixel and create point cloud
+	for y in range(height):
+		for x in range(width):
+			if pixel_data[y][x] == 255:  # Check if pixel is white (representing a line)
+				x_coords.append(x)
+				# Invert y-axis to match typical image coordinates
+				y_coords.append(height - y)
+
+	plt.figure(figsize=(8, 8))
+	plt.scatter(x_coords, y_coords, s=1, color='black')  # Adjust 's' for point size
+	plt.gca().invert_yaxis()  # Invert y-axis to match image orientation
+	plt.xlabel('X')
+	plt.ylabel('Y')
+	plt.title('2D Point Cloud from Image')
+	plt.show()
+
 def vectorize_image(image):
 	img = cv2.imread(image)
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -56,6 +82,8 @@ def vectorize_image(image):
 pic = load_image("/home/benjamin/Documents/Projects/RAM/right.jpg")
 
 epic = enhance_image(pic)
+
+point = img2point(epic)
 
 
 epic.save("cont.jpg")
