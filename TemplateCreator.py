@@ -19,8 +19,8 @@ def enhance_contrast(image):
 def enhance_edges(image):
     # Enhance the edges using a filter (like edge enhancement)
     edge_enhanced_image = image.filter(ImageFilter.EDGE_ENHANCE)
-    return edge_enhanced_image
-    
+    return edge_enhanced_image 
+
 # Function to convert the loaded image into a vector format
 def convert_to_vector(image):
     # Code to process the image and convert it into a vector format using edge detection or other techniques
