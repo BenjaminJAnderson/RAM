@@ -115,7 +115,7 @@ ax.plot(x, y, linestyle='dotted', linewidth=2, color='white')
 ##################### BOTTOM HOLES #####################
 ax.plot([BLHole, BRHole],[BottomY, BottomY], "ro", markersize=10)
 
-##################### BOTTOM HOLES #####################
+##################### MIDDLE HOLES #####################
 ax.plot([MLHole, MRHole],[MidY, MidY], "ro", markersize=10)
 
 
