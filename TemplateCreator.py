@@ -41,17 +41,32 @@ def img2point(image):
 	# Iterate through each pixel and create point cloud
 	for y in range(height):
 		for x in range(width):
-			if pixel_data[y][x] == 255:  # Check if pixel is white (representing a line)
+			if pixel_data[y][x] == 0:  # Check if pixel is white (representing a line)
 				x_coords.append(x)
 				# Invert y-axis to match typical image coordinates
 				y_coords.append(height - y)
 
-	plt.figure(figsize=(8, 8))
-	plt.scatter(x_coords, y_coords, s=1, color='black')  # Adjust 's' for point size
+
+	points = [(x, y) for x, y in zip(x_coords, y_coords)]
+
+	# Apply the Ramer-Douglas-Peucker algorithm to simplify the polyline
+	tolerance = 1.0  # Adjust this value as needed
+	simplified_points = approximate_polygon(points, tolerance=tolerance)
+
+	# Extract X & Y coordinates from the simplified points
+	simplified_x_coordinates, simplified_y_coordinates = zip(*simplified_points)
+
+
+	# Plot original points and fitted curve
+	plt.scatter(x_coords, y_coords, s=1, color='black', label='Original Points')
+	# plt.plot(x_curve, y_curve, color='red', label='Fitted Curve')
+
+	plt.xlabel('X-axis')
+	plt.ylabel('Y-axis')
+	plt.title('Polynomial Regression - Circle Approximation')
 	plt.gca().invert_yaxis()  # Invert y-axis to match image orientation
-	plt.xlabel('X')
-	plt.ylabel('Y')
-	plt.title('2D Point Cloud from Image')
+	plt.legend()
+	plt.grid(True)
 	plt.show()
 
 def vectorize_image(image):
@@ -83,11 +98,11 @@ pic = load_image("/home/benjamin/Documents/Projects/RAM/right.jpg")
 
 epic = enhance_image(pic)
 
-point = img2point(epic)
+# point = img2point(epic)
 
 
 epic.save("cont.jpg")
 
-# vector = vectorize_image("mono.jpg")
+vector = vectorize_image("mono.jpg")
 # vector.save("vect.jpg")
 
