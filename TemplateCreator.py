@@ -77,13 +77,13 @@ def img2Outline(image):
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	plt.subplot(121),plt.imshow(enhanced_image,cmap = 'gray')
-	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(threshold_image,cmap = 'gray')
-	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	plt.show()
+	# plt.subplot(121),plt.imshow(enhanced_image,cmap = 'gray')
+	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(122),plt.imshow(threshold_image,cmap = 'gray')
+	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	# plt.show()
 
-	epsilon = 0.008 * cv2.arcLength(contours[0], True)
+	epsilon = 0.005 * cv2.arcLength(contours[0], True)
 	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
 
 	points = np.squeeze(poly_contour)
@@ -113,8 +113,8 @@ if __name__ == "__main__":
 	A4_x, A4_y = 2480, 3508
 	pix2mmX, pix2mmY= 210/A4_x, 297/A4_y
 
-	width = np.around(np.sqrt((EX - WX)**2 + (EY - WY)**2))
-	height = np.around(np.sqrt((NX - SX)**2 + (NY - SY)**2))
+	width = np.sqrt((EX - WX)**2 + (EY - WY)**2)
+	height = np.sqrt((NX - SX)**2 + (NY - SY)**2)
 
 	#Bottom holes
 	BottomY = SY - (height * 0.20)
@@ -141,8 +141,8 @@ if __name__ == "__main__":
 	##################### HEIGHT & WIDTH INFO #####################
 	ax.plot([NX, SX], [NY, SY], 'g--')
 	ax.plot([EX, WX], [EY, WY], 'r--')
-	ax.text(50, 150, f"Width = {width * pix2mmX}mm", fontsize=7)
-	ax.text(50, 300, f"Height = {height * pix2mmY}mm", fontsize=7)
+	ax.text(50, 150, f"Width = {np.around(width * pix2mmX)}mm", fontsize=7)
+	ax.text(50, 300, f"Height = {np.around(height * pix2mmY)}mm", fontsize=7)
 
 
 	##################### OUTLINE & STITCHLINE #####################
