@@ -29,7 +29,7 @@ def enhance_image(image):
 	# plt.show()
 	return blurred_image
 
-def vectorize_image(image):
+def img2Array(image):
 	img = cv2.imread(image)
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
@@ -42,30 +42,27 @@ def vectorize_image(image):
 	smooth_contours = []
 
 	points = np.squeeze(poly_contour)
-	print(points)
 	tck, u = splprep(points.T, u=None, s=0, per=1)   # Spline fitting
 	u_new = np.linspace(u.min(), u.max(), 1000)
 	x_new, y_new = splev(u_new, tck, der=0)
-	# smooth_contours.append(np.column_stack(smooth_curve).astype(np.int32))
 
 
 	contour_image = np.zeros_like(img)
 	contour_image = cv2.drawContours(img, smooth_contours, -1, (0,255,0), 10)
 
-	
+	return x_new, y_new
 
 
+outline = load_image("/home/benjamin/Documents/Projects/RAM/right2.jpg")
 
-	plt.subplot(121),plt.imshow(im,cmap = 'gray')
-	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(contour_image,cmap = 'gray'),plt.plot(points[:,0], points[:,1], 'ro'),plt.plot(x_new, y_new, 'b--')
-	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	plt.show()
+enhanced_outline = enhance_image(outline)
+enhanced_outline.save("enhanced.jpg")
+x,y = img2Array("/home/benjamin/Documents/Projects/RAM/enhanced.jpg")
 
-pic = load_image("/home/benjamin/Documents/Projects/RAM/right2.jpg")
 
-epic = enhance_image(pic)
-epic.save("enhanced.jpg")
-vector = vectorize_image("/home/benjamin/Documents/Projects/RAM/enhanced.jpg")
+plt.imshow(outline)
+plt.plot(x, y, 'b--')
+plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+plt.show()
 
 
