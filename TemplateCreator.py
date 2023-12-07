@@ -42,7 +42,7 @@ def vectorize_image(image):
 
 	points = np.squeeze(poly_contour)
 	t = np.arange(len(points))
-	poly_degree = 3  # Adjust the polynomial degree as needed
+	poly_degree = 11  # Adjust the polynomial degree as needed
 	coef_x = np.polyfit(t, points[:, 0], poly_degree)
 	coef_y = np.polyfit(t, points[:, 1], poly_degree)
 	t_new = np.linspace(0, len(points) - 1, 100)
