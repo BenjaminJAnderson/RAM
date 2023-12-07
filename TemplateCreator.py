@@ -15,7 +15,7 @@ def load_image(file_path):
 		print("Unable to load image")
 		return None
 
-def enhance_hole(image):
+def img2hole(image):
 	enhancer = ImageEnhance.Contrast(image)
 	enhanced_image = enhancer.enhance(3)
 
@@ -33,12 +33,18 @@ def enhance_hole(image):
 	dilated_image = threshold_image.filter(ImageFilter.MaxFilter(size=5))
 	compatible_image = dilated_image.convert('RGB')
 	blurred_image = compatible_image.filter(ImageFilter.GaussianBlur(radius=10))
+	blurred_image.save("enhanced_holes.jpg")
 
-	# plt.subplot(121),plt.imshow(image,cmap = 'gray')
-	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	# plt.subplot(122),plt.imshow(blurred_image,cmap = 'gray')
-	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	# plt.show()
+	img = cv2.imread("enhanced_holes.jpg")
+	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
+	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+	plt.subplot(121),plt.imshow(image,cmap = 'gray')
+	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	plt.subplot(122),plt.imshow(im,cmap = 'gray')
+	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	plt.show()
 
 
 	return blurred_image
@@ -49,17 +55,18 @@ def img2Outline(image):
 	dilated_image = threshold_image.filter(ImageFilter.MaxFilter(size=5))
 	compatible_image = dilated_image.convert('RGB')
 	blurred_image = compatible_image.filter(ImageFilter.GaussianBlur(radius=10))
+	blurred_image.save("enhanced_outline.jpg")
+
+	img = cv2.imread("enhanced_outline.jpg")
+	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
+	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 	plt.subplot(121),plt.imshow(image,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
 	plt.subplot(122),plt.imshow(blurred_image,cmap = 'gray')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	plt.show()
-	blurred_image.save("enhanced_outline.jpg")
-	img = cv2.imread("enhanced_outline.jpg")
-	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
-	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 	epsilon = 0.008 * cv2.arcLength(contours[0], True)
 	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
@@ -82,17 +89,17 @@ def img2Outline(image):
 if __name__ == "__main__":
 	drawing = load_image("left.jpg")
 
-	x,y = img2Outline(drawing)
-	# enhanced_hole = enhance_hole(drawing)
+	x_list,y_list = img2Outline(drawing)
+	# x,y = img2hole(drawing)
 
-	N_index = np.argmin(y)
-	E_index = np.argmax(x)
-	S_index = np.argmax(y)
-	W_index = np.argmin(x)
-	NX, NY = x[N_index], y[N_index]
-	EX, EY = x[E_index], y[E_index]
-	SX, SY = x[S_index], y[S_index]
-	WX, WY = x[W_index], y[W_index]
+	N_index = np.argmin(y_list)
+	E_index = np.argmax(x_list)
+	S_index = np.argmax(y_list)
+	W_index = np.argmin(x_list)
+	NX, NY = x_list[N_index], y_list[N_index]
+	EX, EY = x_list[E_index], y_list[E_index]
+	SX, SY = x_list[S_index], y_list[S_index]
+	WX, WY = x_list[W_index], y_list[W_index]
 
 	#A4 conversion
 	A4_x, A4_y = 2480, 3508
@@ -105,15 +112,15 @@ if __name__ == "__main__":
 	BottomY = SY - (height * 0.20)
 	tolerance = 4
 	PixelGap = 75
-	indices_close = [i for i, y_val in enumerate(y) if abs(y_val - BottomY) < tolerance]
-	BLHole = x[indices_close[0]] + PixelGap
-	BRHole = x[indices_close[-1]] - PixelGap
+	indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
+	BLHole = x_list[indices_close[0]] + PixelGap
+	BRHole = x_list[indices_close[-1]] - PixelGap
 
 	#Bottom holes
 	MidY = SY - (height * 0.45)
-	indices_close = [i for i, y_val in enumerate(y) if abs(y_val - MidY) < tolerance]
-	MLHole = x[indices_close[0]] + PixelGap
-	MRHole = x[indices_close[-1]] - PixelGap
+	indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - MidY) < tolerance]
+	MLHole = x_list[indices_close[0]] + PixelGap
+	MRHole = x_list[indices_close[-1]] - PixelGap
 
 
 	##################### SETTINGS #####################
@@ -132,8 +139,8 @@ if __name__ == "__main__":
 
 
 	##################### OUTLINE & STITCHLINE #####################
-	ax.plot(x, y, linestyle='solid', linewidth=15, color='black')
-	ax.plot(x, y, linestyle='dotted', linewidth=2, color='white')
+	ax.plot(x_list, y_list, linestyle='solid', linewidth=15, color='black')
+	ax.plot(x_list, y_list, linestyle='dotted', linewidth=2, color='white')
 
 	##################### BOTTOM HOLES #####################
 	ax.plot([BLHole, BRHole],[BottomY, BottomY], "ro", markersize=10)
