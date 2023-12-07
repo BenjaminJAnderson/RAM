@@ -38,16 +38,24 @@ def img2hole(image):
 	img = cv2.imread("enhanced_holes.jpg")
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	ret, im = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-	# contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+	epsilon = 0.008 * cv2.arcLength(contours[0], True)
+	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
+	points = np.squeeze(poly_contour)
+	point = np.mean(points.T, axis=1)
+
+	contour_image = np.zeros_like(img)
+	contour_image = cv2.drawContours(img, poly_contour, -1, (0,255,0), 10)
 
 	plt.subplot(121),plt.imshow(image,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(im,cmap = 'gray')
+	plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	plt.show()
 
 
-	return blurred_image
+	return point
 
 def img2Outline(image):
 	grayscale_image = image.convert('L')
@@ -60,11 +68,12 @@ def img2Outline(image):
 	img = cv2.imread("enhanced_outline.jpg")
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
+	# ret, im = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 	# plt.subplot(121),plt.imshow(image,cmap = 'gray')
 	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	# plt.subplot(122),plt.imshow(blurred_image,cmap = 'gray')
+	# plt.subplot(122),plt.imshow(im,cmap = 'gray')
 	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	# plt.show()
 
@@ -116,12 +125,11 @@ if __name__ == "__main__":
 	BLHole = x_list[indices_close[0]] + PixelGap
 	BRHole = x_list[indices_close[-1]] - PixelGap
 
-	#Bottom holes
+	#Middle holes
 	MidY = SY - (height * 0.45)
 	indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - MidY) < tolerance]
 	MLHole = x_list[indices_close[0]] + PixelGap
 	MRHole = x_list[indices_close[-1]] - PixelGap
-
 
 	##################### SETTINGS #####################
 	fig, ax = plt.subplots(figsize=(8.26772, 11.6929)) # A4 Paper
@@ -148,7 +156,8 @@ if __name__ == "__main__":
 	##################### MIDDLE HOLES #####################
 	ax.plot([MLHole, MRHole],[MidY, MidY], "ro", markersize=10)
 
-
+	##################### TOP HOLES #####################
+	ax.plot(x,y, "ro", markersize=10)
 
 	fig.savefig('modified_a4_figure.png', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
 	plt.show()
