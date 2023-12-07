@@ -1,6 +1,7 @@
 from PIL import Image, ImageFilter
 import cv2
 import numpy as np
+from scipy.interpolate import splprep, splev
 
 
 from matplotlib import pyplot as plt
@@ -41,25 +42,23 @@ def vectorize_image(image):
 	smooth_contours = []
 
 	points = np.squeeze(poly_contour)
-	t = np.arange(len(points))
-	poly_degree = 11  # Adjust the polynomial degree as needed
-	coef_x = np.polyfit(t, points[:, 0], poly_degree)
-	coef_y = np.polyfit(t, points[:, 1], poly_degree)
-	t_new = np.linspace(0, len(points) - 1, 100)
-	x_smooth = np.polyval(coef_x, t_new)
-	y_smooth = np.polyval(coef_y, t_new)
-	smooth_contours.append(np.column_stack((x_smooth, y_smooth)).astype(np.int32))
+	print(points)
+	tck, u = splprep(points.T, u=None, s=0.0, per=1)   # Spline fitting
+	u_new = np.linspace(u.min(), u.max(), 1000)
+	x_new, y_new = splev(u_new, tck, der=0)
+	# smooth_contours.append(np.column_stack(smooth_curve).astype(np.int32))
+
 
 	contour_image = np.zeros_like(img)
 	contour_image = cv2.drawContours(img, smooth_contours, -1, (0,255,0), 10)
 
-    
+	
 
 
 
 	plt.subplot(121),plt.imshow(im,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
+	plt.subplot(122),plt.imshow(contour_image,cmap = 'gray'),plt.plot(points[:,0], points[:,1], 'ro'),plt.plot(x_new, y_new, 'b--')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	plt.show()
 
