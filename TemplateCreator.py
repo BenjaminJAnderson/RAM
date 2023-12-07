@@ -73,26 +73,9 @@ def vectorize_image(image):
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-	largest_contour = max(contours, key=cv2.contourArea)
 
 	contour_image = np.zeros_like(img)
 	contour_image = cv2.drawContours(img, contours, -1, (0,255,0), 10)
-
-	# Extract contour coordinates
-	contour_coords = largest_contour.reshape(-1, 2)  # Reshape to get x, y coordinates
-
-	# Create a 2D array for the image vector
-	min_x, min_y = np.min(contour_coords, axis=0)
-	max_x, max_y = np.max(contour_coords, axis=0)
-	shape_width = max_x - min_x + 1
-	shape_height = max_y - min_y + 1
-
-	vector_image = np.zeros((shape_height, shape_width), dtype=np.uint8)
-	shifted_coords = contour_coords - [min_x, min_y]
-	cv2.drawContours(vector_image, [shifted_coords], -1, 255, thickness=cv2.FILLED)
-
-
-
 
 	plt.subplot(121),plt.imshow(im,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
