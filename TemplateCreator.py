@@ -72,11 +72,11 @@ W_index = np.argmin(x)
 WX, WY = x[W_index], y[W_index]
 
 plt.imshow(outline)
-plt.plot(x, y, 'b--')
 plt.plot([NX,SX], [NY,SY], 'g--')
 plt.plot([EX,WX], [EY,WY], 'r--')
-# plt.plot([SX], SY, 'bo')
-# plt.plot(WX, WY, 'yo')
+plt.plot(x, y, linestyle='solid', linewidth=10, color='black')
+plt.plot(x, y, linestyle='dotted',linewidth=2, color='white')
+
 plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 plt.show()
 
