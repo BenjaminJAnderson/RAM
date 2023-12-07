@@ -13,20 +13,17 @@ def load_image(file_path):
 		print("Unable to load image")
 		return None
 
-def enhance_image(image, threshold=128):
-	# Enhance the contrast of the image
+def enhance_image(image):
 	grayscale_image = image.convert('L')
-	enhancer = ImageEnhance.Contrast(grayscale_image)
-	enhanced_image = enhancer.enhance(5)  # Adjust the factor for desired contrast enhancement
-	threshold_image = enhanced_image.point(lambda p: 0 if p < threshold else 255, '1')
-	dilated_image = threshold_image.filter(ImageFilter.MaxFilter(size=3))
+	threshold_image = grayscale_image.point(lambda p: 0 if p < 255 else 255, '1')
+	dilated_image = threshold_image.filter(ImageFilter.MaxFilter(size=5))
 
-	# plt.subplot(121),plt.imshow(image,cmap = 'gray')
-	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	# plt.subplot(122),plt.imshow(dilated_image,cmap = 'gray')
-	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	# plt.show()
-	return dilated_image
+	plt.subplot(121),plt.imshow(threshold_image,cmap = 'gray')
+	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	plt.subplot(122),plt.imshow(dilated_image,cmap = 'gray')
+	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	plt.show()
+	return threshold_image
 
 def img2point(image):
 	pixel_data = np.array(image)
@@ -101,13 +98,13 @@ def vectorize_image(image):
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	plt.show()
 
-# pic = load_image("/home/benjamin/Documents/Projects/RAM/Untitled1.jpg")
+pic = load_image("/home/benjamin/Documents/Projects/RAM/left.jpg")
 
-# epic = enhance_image(pic)
+epic = enhance_image(pic)
 
 # point = img2point(epic)
 
 
-vector = vectorize_image("/home/benjamin/Documents/Projects/RAM/Untitled1.jpg")
+# vector = vectorize_image("/home/benjamin/Documents/Projects/RAM/Untitled1.jpg")
 # vector.save("vect.jpg")
 
