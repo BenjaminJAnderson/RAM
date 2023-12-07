@@ -39,14 +39,16 @@ def vectorize_image(image):
 
 	
 	smooth_contours = []
-	for points in np.squeeze(poly_contour):
-			t = np.arange(len(points))
-			poly_degree = 3  # Adjust the polynomial degree as needed
-			coeffs = np.polyfit(t, points[:, 0], poly_degree), np.polyfit(t, points[:, 1], poly_degree)
-			t_new = np.linspace(0, len(points) - 1, 100)
-			x_smooth = np.polyval(coeffs[0], t_new)
-			y_smooth = np.polyval(coeffs[1], t_new)
-			smooth_contours.append(np.column_stack((x_smooth, y_smooth)).astype(np.int32))
+
+	points = np.squeeze(poly_contour)
+	t = np.arange(len(points))
+	poly_degree = 3  # Adjust the polynomial degree as needed
+	coef_x = np.polyfit(t, points[:, 0], poly_degree)
+	coef_y = np.polyfit(t, points[:, 1], poly_degree)
+	t_new = np.linspace(0, len(points) - 1, 100)
+	x_smooth = np.polyval(coef_x, t_new)
+	y_smooth = np.polyval(coef_y, t_new)
+	smooth_contours.append(np.column_stack((x_smooth, y_smooth)).astype(np.int32))
 
 	contour_image = np.zeros_like(img)
 	contour_image = cv2.drawContours(img, smooth_contours, -1, (0,255,0), 10)
