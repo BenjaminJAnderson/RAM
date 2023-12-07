@@ -158,7 +158,7 @@ if __name__ == "__main__":
 	##################### TOP HOLES #####################
 	ax.plot(x,y, "ro", markersize=10)
 
-	fig.savefig('modified_a4_figure.png', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
+	fig.savefig('modified_a4_figure.jpg', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
 	plt.show()
 
 
