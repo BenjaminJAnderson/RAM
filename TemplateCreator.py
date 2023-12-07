@@ -87,29 +87,13 @@ ax.imshow(outline)
 ax.plot([NX, SX], [NY, SY], 'g--')
 ax.plot([EX, WX], [EY, WY], 'r--')
 
-# plt.imshow(outline)
-# plt.plot([NX,SX], [NY,SY], 'g--')
-# plt.plot([EX,WX], [EY,WY], 'r--')
-
 ax.plot(x, y, linestyle='solid', linewidth=15, color='black')
 ax.plot(x, y, linestyle='dotted', linewidth=2, color='white')
-
-# plt.plot(x, y, linestyle='solid', linewidth=10, color='black')
-# plt.plot(x, y, linestyle='dotted',linewidth=2, color='white')
 
 ax.text(50, 150, f"Width = {width}mm", fontsize=7)
 ax.text(50, 300, f"Height = {height}mm", fontsize=7)
 
-# plt.text(50,150,f"Width = {width}mm", fontsize=7)
-# plt.text(50,300,f"Height = {height}mm", fontsize=7)
-
-ax.set_xticks([]), ax.set_yticks([])
-
 fig.savefig('modified_a4_figure.png', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
 plt.show()
-
-# plt.xticks([]),plt.yticks([])
-
-# plt.show()
 
 
