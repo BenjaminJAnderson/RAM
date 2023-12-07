@@ -37,8 +37,8 @@ def img2hole(image):
 
 	img = cv2.imread("enhanced_holes.jpg")
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
-	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	ret, im = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+	# contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 	plt.subplot(121),plt.imshow(image,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
@@ -62,11 +62,11 @@ def img2Outline(image):
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	plt.subplot(121),plt.imshow(image,cmap = 'gray')
-	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(blurred_image,cmap = 'gray')
-	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	plt.show()
+	# plt.subplot(121),plt.imshow(image,cmap = 'gray')
+	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(122),plt.imshow(blurred_image,cmap = 'gray')
+	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	# plt.show()
 
 	epsilon = 0.008 * cv2.arcLength(contours[0], True)
 	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
@@ -90,7 +90,7 @@ if __name__ == "__main__":
 	drawing = load_image("left.jpg")
 
 	x_list,y_list = img2Outline(drawing)
-	# x,y = img2hole(drawing)
+	x,y = img2hole(drawing)
 
 	N_index = np.argmin(y_list)
 	E_index = np.argmax(x_list)
