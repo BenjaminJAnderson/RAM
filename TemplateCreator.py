@@ -71,13 +71,26 @@ SX, SY= x[S_index], y[S_index]
 W_index = np.argmin(x)
 WX, WY = x[W_index], y[W_index]
 
+#A4 conversion
+pix2mmX = 210/2480
+pix2mmY = 297/3508
+
+width = np.around(np.sqrt((EX - WX)**2 + (EY - WY)**2) * pix2mmX)
+height = np.around(np.sqrt((NX - SX)**2 + (NY - SY)**2) * pix2mmY)
+
+
 plt.imshow(outline)
 plt.plot([NX,SX], [NY,SY], 'g--')
 plt.plot([EX,WX], [EY,WY], 'r--')
+
 plt.plot(x, y, linestyle='solid', linewidth=10, color='black')
 plt.plot(x, y, linestyle='dotted',linewidth=2, color='white')
 
-plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+plt.plot(NX,NY, "ro")
+plt.text(50,150,f"Width = {width}", fontsize=7)
+plt.text(50,300,f"Height = {height}", fontsize=7)
+
+plt.xticks([]),plt.yticks([])
 plt.show()
 
 
