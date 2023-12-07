@@ -72,26 +72,53 @@ W_index = np.argmin(x)
 WX, WY = x[W_index], y[W_index]
 
 #A4 conversion
-pix2mmX = 210/2480
-pix2mmY = 297/3508
+A4_x, A4_y = 2480, 3508
+pix2mmX, pix2mmY= 210/A4_x, 297/A4_y
 
-width = np.around(np.sqrt((EX - WX)**2 + (EY - WY)**2) * pix2mmX)
-height = np.around(np.sqrt((NX - SX)**2 + (NY - SY)**2) * pix2mmY)
+width = np.around(np.sqrt((EX - WX)**2 + (EY - WY)**2))
+height = np.around(np.sqrt((NX - SX)**2 + (NY - SY)**2))
+
+#Bottom holes
+BottomY = SY - (height * 0.20)
+tolerance = 4
+PixelGap = 75
+indices_close = [i for i, y_val in enumerate(y) if abs(y_val - BottomY) < tolerance]
+BLHole = x[indices_close[0]] + PixelGap
+BRHole = x[indices_close[-1]] - PixelGap
+
+#Bottom holes
+MidY = SY - (height * 0.45)
+indices_close = [i for i, y_val in enumerate(y) if abs(y_val - MidY) < tolerance]
+MLHole = x[indices_close[0]] + PixelGap
+MRHole = x[indices_close[-1]] - PixelGap
 
 
+##################### SETTINGS #####################
 fig, ax = plt.subplots(figsize=(8.26772, 11.6929)) # A4 Paper
 fig.tight_layout()
 ax.axis('off')
 
+##################### IMAGE #####################
 ax.imshow(outline)
+
+##################### HEIGHT & WIDTH INFO #####################
 ax.plot([NX, SX], [NY, SY], 'g--')
 ax.plot([EX, WX], [EY, WY], 'r--')
+ax.text(50, 150, f"Width = {width * pix2mmX}mm", fontsize=7)
+ax.text(50, 300, f"Height = {height * pix2mmY}mm", fontsize=7)
 
+
+##################### OUTLINE & STITCHLINE #####################
 ax.plot(x, y, linestyle='solid', linewidth=15, color='black')
 ax.plot(x, y, linestyle='dotted', linewidth=2, color='white')
 
-ax.text(50, 150, f"Width = {width}mm", fontsize=7)
-ax.text(50, 300, f"Height = {height}mm", fontsize=7)
+##################### BOTTOM HOLES #####################
+ax.plot([BLHole, BRHole],[BottomY, BottomY], "ro", markersize=10)
+
+##################### BOTTOM HOLES #####################
+ax.plot([MLHole, MRHole],[MidY, MidY], "ro", markersize=10)
+
+
 
 fig.savefig('modified_a4_figure.png', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
 plt.show()
