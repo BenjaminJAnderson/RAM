@@ -1,4 +1,4 @@
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageFilter
 import cv2
 import numpy as np
 
@@ -27,55 +27,20 @@ def enhance_image(image):
 	# plt.show()
 	return blurred_image
 
-def img2point(image):
-	pixel_data = np.array(image)
-
-	# Get height and width of the image
-	height, width = pixel_data.shape
-
-	# Create lists to store x, y coordinates
-	x_coords = []
-	y_coords = []
-
-	# Iterate through each pixel and create point cloud
-	for y in range(height):
-		for x in range(width):
-			if pixel_data[y][x] == 0:  # Check if pixel is white (representing a line)
-				x_coords.append(x)
-				# Invert y-axis to match typical image coordinates
-				y_coords.append(height - y)
-
-
-	points = [(x, y) for x, y in zip(x_coords, y_coords)]
-
-	# Apply the Ramer-Douglas-Peucker algorithm to simplify the polyline
-	tolerance = 1.0  # Adjust this value as needed
-	simplified_points = approximate_polygon(points, tolerance=tolerance)
-
-	# Extract X & Y coordinates from the simplified points
-	simplified_x_coordinates, simplified_y_coordinates = zip(*simplified_points)
-
-
-	# Plot original points and fitted curve
-	plt.scatter(x_coords, y_coords, s=1, color='black', label='Original Points')
-	# plt.plot(x_curve, y_curve, color='red', label='Fitted Curve')
-
-	plt.xlabel('X-axis')
-	plt.ylabel('Y-axis')
-	plt.title('Polynomial Regression - Circle Approximation')
-	plt.gca().invert_yaxis()  # Invert y-axis to match image orientation
-	plt.legend()
-	plt.grid(True)
-	plt.show()
-
 def vectorize_image(image):
 	img = cv2.imread(image)
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+	smooth_contours = []
+	for contour in contours:
+		epsilon = 0.01 * cv2.arcLength(contour, True)
+		approx = cv2.approxPolyDP(contour, epsilon, True)
+		smooth_contours.append(approx)
 	contour_image = np.zeros_like(img)
-	contour_image = cv2.drawContours(img, contours, -1, (0,255,0), 10)
+	contour_image = cv2.drawContours(img, smooth_contours, -1, (0,255,0), 10)
+
+
 
 	plt.subplot(121),plt.imshow(im,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
