@@ -79,17 +79,37 @@ width = np.around(np.sqrt((EX - WX)**2 + (EY - WY)**2) * pix2mmX)
 height = np.around(np.sqrt((NX - SX)**2 + (NY - SY)**2) * pix2mmY)
 
 
-plt.imshow(outline)
-plt.plot([NX,SX], [NY,SY], 'g--')
-plt.plot([EX,WX], [EY,WY], 'r--')
+fig, ax = plt.subplots(figsize=(8.26772, 11.6929)) # A4 Paper
+fig.tight_layout()
+ax.axis('off')
 
-plt.plot(x, y, linestyle='solid', linewidth=10, color='black')
-plt.plot(x, y, linestyle='dotted',linewidth=2, color='white')
+ax.imshow(outline)
+ax.plot([NX, SX], [NY, SY], 'g--')
+ax.plot([EX, WX], [EY, WY], 'r--')
 
-plt.text(50,150,f"Width = {width}mm", fontsize=7)
-plt.text(50,300,f"Height = {height}mm", fontsize=7)
+# plt.imshow(outline)
+# plt.plot([NX,SX], [NY,SY], 'g--')
+# plt.plot([EX,WX], [EY,WY], 'r--')
 
-plt.xticks([]),plt.yticks([])
+ax.plot(x, y, linestyle='solid', linewidth=15, color='black')
+ax.plot(x, y, linestyle='dotted', linewidth=2, color='white')
+
+# plt.plot(x, y, linestyle='solid', linewidth=10, color='black')
+# plt.plot(x, y, linestyle='dotted',linewidth=2, color='white')
+
+ax.text(50, 150, f"Width = {width}mm", fontsize=7)
+ax.text(50, 300, f"Height = {height}mm", fontsize=7)
+
+# plt.text(50,150,f"Width = {width}mm", fontsize=7)
+# plt.text(50,300,f"Height = {height}mm", fontsize=7)
+
+ax.set_xticks([]), ax.set_yticks([])
+
+fig.savefig('modified_a4_figure.png', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
 plt.show()
+
+# plt.xticks([]),plt.yticks([])
+
+# plt.show()
 
 
