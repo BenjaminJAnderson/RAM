@@ -17,13 +17,15 @@ def enhance_image(image):
 	grayscale_image = image.convert('L')
 	threshold_image = grayscale_image.point(lambda p: 0 if p < 255 else 255, '1')
 	dilated_image = threshold_image.filter(ImageFilter.MaxFilter(size=5))
+	compatible_image = dilated_image.convert('RGB')
+	blurred_image = compatible_image.filter(ImageFilter.GaussianBlur(radius=10))
 
-	plt.subplot(121),plt.imshow(threshold_image,cmap = 'gray')
-	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(dilated_image,cmap = 'gray')
-	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	plt.show()
-	return threshold_image
+	# plt.subplot(121),plt.imshow(threshold_image,cmap = 'gray')
+	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(122),plt.imshow(blurred_image,cmap = 'gray')
+	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	# plt.show()
+	return blurred_image
 
 def img2point(image):
 	pixel_data = np.array(image)
@@ -101,10 +103,7 @@ def vectorize_image(image):
 pic = load_image("/home/benjamin/Documents/Projects/RAM/left.jpg")
 
 epic = enhance_image(pic)
+epic.save("enhanced.jpg")
+vector = vectorize_image("/home/benjamin/Documents/Projects/RAM/enhanced.jpg")
 
-# point = img2point(epic)
-
-
-# vector = vectorize_image("/home/benjamin/Documents/Projects/RAM/Untitled1.jpg")
-# vector.save("vect.jpg")
 
