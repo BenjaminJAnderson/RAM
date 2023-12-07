@@ -86,9 +86,8 @@ plt.plot([EX,WX], [EY,WY], 'r--')
 plt.plot(x, y, linestyle='solid', linewidth=10, color='black')
 plt.plot(x, y, linestyle='dotted',linewidth=2, color='white')
 
-plt.plot(NX,NY, "ro")
-plt.text(50,150,f"Width = {width}", fontsize=7)
-plt.text(50,300,f"Height = {height}", fontsize=7)
+plt.text(50,150,f"Width = {width}mm", fontsize=7)
+plt.text(50,300,f"Height = {height}mm", fontsize=7)
 
 plt.xticks([]),plt.yticks([])
 plt.show()
