@@ -61,7 +61,7 @@ x,y = img2Array("/home/benjamin/Documents/Projects/RAM/enhanced.jpg")
 
 
 plt.imshow(outline)
-plt.plot(x, y, 'b--')
+plt.plot(x, y, 'b--') 
 plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 plt.show()
 
