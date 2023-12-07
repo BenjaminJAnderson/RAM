@@ -27,13 +27,12 @@ def img2hole(image):
 			if pixel != (0, 0, 0):
 				# If it's not black, set it to white
 				enhanced_image.putpixel((x, y), (255, 255, 255))  # Set as white
-
-	grayscale_image = enhanced_image.convert('L')
+	dilated_image = enhanced_image.filter(ImageFilter.MaxFilter(size=5))
+	blurred_image = dilated_image.filter(ImageFilter.GaussianBlur(radius=10))
+	grayscale_image = blurred_image.convert('L')
 	threshold_image = grayscale_image.point(lambda p: 0 if p < 255 else 255, '1')
-	dilated_image = threshold_image.filter(ImageFilter.MaxFilter(size=5))
-	compatible_image = dilated_image.convert('RGB')
-	blurred_image = compatible_image.filter(ImageFilter.GaussianBlur(radius=10))
-	blurred_image.save("enhanced_holes.jpg")
+	
+	threshold_image.save("enhanced_holes.jpg")
 
 	img = cv2.imread("enhanced_holes.jpg")
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -58,12 +57,21 @@ def img2hole(image):
 	return point
 
 def img2Outline(image):
-	grayscale_image = image.convert('L')
+	enhancer = ImageEnhance.Contrast(image)
+	enhanced_image = enhancer.enhance(3)
+	width, height = image.size
+	for x in range(width):
+		for y in range(height):
+			pixel = enhanced_image.getpixel((x, y))
+			# Check if the pixel is not black
+			if (0, 0, 0) <= pixel <= (5, 5, 5):
+				enhanced_image.putpixel((x, y), (255, 255, 255))  # Set as white
+	dilated_image = enhanced_image.filter(ImageFilter.MaxFilter(size=5))
+	blurred_image = dilated_image.filter(ImageFilter.GaussianBlur(radius=10))
+	grayscale_image = blurred_image.convert('L')
 	threshold_image = grayscale_image.point(lambda p: 0 if p < 255 else 255, '1')
-	dilated_image = threshold_image.filter(ImageFilter.MaxFilter(size=5))
-	compatible_image = dilated_image.convert('RGB')
-	blurred_image = compatible_image.filter(ImageFilter.GaussianBlur(radius=10))
-	blurred_image.save("enhanced_outline.jpg")
+
+	threshold_image.save("enhanced_outline.jpg")
 
 	img = cv2.imread("enhanced_outline.jpg")
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -71,11 +79,11 @@ def img2Outline(image):
 	# ret, im = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	# plt.subplot(121),plt.imshow(image,cmap = 'gray')
-	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	# plt.subplot(122),plt.imshow(im,cmap = 'gray')
-	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	# plt.show()
+	plt.subplot(121),plt.imshow(enhanced_image,cmap = 'gray')
+	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	plt.subplot(122),plt.imshow(threshold_image,cmap = 'gray')
+	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	plt.show()
 
 	epsilon = 0.008 * cv2.arcLength(contours[0], True)
 	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
@@ -96,7 +104,7 @@ def img2Outline(image):
 
 
 if __name__ == "__main__":
-	drawing = load_image("left.jpg")
+	drawing = load_image("right.jpg")
 
 	x_list,y_list = img2Outline(drawing)
 	x,y = img2hole(drawing)
