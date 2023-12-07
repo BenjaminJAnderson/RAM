@@ -53,7 +53,7 @@ def img2Array(image):
 	return x_new, y_new
 
 
-outline = load_image("/home/benjamin/Documents/Projects/RAM/right2.jpg")
+outline = load_image("/home/benjamin/Documents/Projects/RAM/right.jpg")
 
 enhanced_outline = enhance_image(outline)
 enhanced_outline.save("enhanced.jpg")
