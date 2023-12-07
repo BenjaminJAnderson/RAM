@@ -35,7 +35,7 @@ def vectorize_image(image):
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	epsilon = 0.01 * cv2.arcLength(contours[0], True)
+	epsilon = 0.0075 * cv2.arcLength(contours[0], True)
 	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
 
 	
@@ -43,7 +43,7 @@ def vectorize_image(image):
 
 	points = np.squeeze(poly_contour)
 	print(points)
-	tck, u = splprep(points.T, u=None, s=0.0, per=1)   # Spline fitting
+	tck, u = splprep(points.T, u=None, s=0, per=1)   # Spline fitting
 	u_new = np.linspace(u.min(), u.max(), 1000)
 	x_new, y_new = splev(u_new, tck, der=0)
 	# smooth_contours.append(np.column_stack(smooth_curve).astype(np.int32))
@@ -62,7 +62,7 @@ def vectorize_image(image):
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	plt.show()
 
-pic = load_image("/home/benjamin/Documents/Projects/RAM/left.jpg")
+pic = load_image("/home/benjamin/Documents/Projects/RAM/right2.jpg")
 
 epic = enhance_image(pic)
 epic.save("enhanced.jpg")
