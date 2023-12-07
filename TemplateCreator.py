@@ -1,6 +1,10 @@
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import Image, ImageFilter
 import cv2
 import numpy as np
+from scipy.interpolate import splprep, splev
+
+
+from matplotlib import pyplot as plt
 
 def load_image(file_path):
 	try:
@@ -11,48 +15,54 @@ def load_image(file_path):
 		print("Unable to load image")
 		return None
 
-def enhance_contrast(image):
-	# Enhance the contrast of the image
-	enhancer = ImageEnhance.Contrast(image)
-	enhanced_image = enhancer.enhance(5)  # Adjust the factor for desired contrast enhancement
-	return enhanced_image
+def enhance_image(image):
+	grayscale_image = image.convert('L')
+	threshold_image = grayscale_image.point(lambda p: 0 if p < 255 else 255, '1')
+	dilated_image = threshold_image.filter(ImageFilter.MaxFilter(size=5))
+	compatible_image = dilated_image.convert('RGB')
+	blurred_image = compatible_image.filter(ImageFilter.GaussianBlur(radius=10))
 
-def convert_to_monotone(image, threshold=128):
-    grayscale_image = image.convert("L")  # Convert to grayscale
-    # Threshold the image to create a monotone image
-    monotone_image = grayscale_image.point(lambda p: 0 if p < threshold else 255, '1')
-    return monotone_image
+	# plt.subplot(121),plt.imshow(threshold_image,cmap = 'gray')
+	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(122),plt.imshow(blurred_image,cmap = 'gray')
+	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	# plt.show()
+	return blurred_image
 
-# Function to convert the loaded image into a vector format
-# def convert_to_vector(image):
-	# Code to process the image and convert it into a vector format using edge detection or other techniques
+def img2Array(image):
+	img = cv2.imread(image)
+	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
+	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-# # Function to extract the outline of the foot from the vector image
-# def extract_foot_outline(vector_image):
-# 	# Code to analyze the vector image and extract the foot outline, possibly using image processing algorithms
+	epsilon = 0.0075 * cv2.arcLength(contours[0], True)
+	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
 
-# # Function to smooth the extracted foot outline
-# def smooth_outline(foot_outline):
-# 	# Code to apply a smoothing algorithm to the foot outline, removing jagged edges or imperfections
+	
+	smooth_contours = []
 
-# # Function to conform the outline to a more aesthetic shape
-# def conform_to_aesthetic_shape(smoothed_outline):
-# 	# Code to reshape the outline to a more aesthetic form, using predefined templates or mathematical transformations
+	points = np.squeeze(poly_contour)
+	tck, u = splprep(points.T, u=None, s=0, per=1)   # Spline fitting
+	u_new = np.linspace(u.min(), u.max(), 1000)
+	x_new, y_new = splev(u_new, tck, der=0)
 
-# # Function to generate the final sandal shape
-# def generate_sandal_shape(aesthetic_outline, sole_shape):
-# 	# Code to combine the aesthetic foot outline with a sole shape to create the final sandal shape
 
-# # Function to output/save/display the resulting sandal shape
-# def output_result(sandal_shape):
-# 	# Code to save or display the resulting sandal shape for the user
+	contour_image = np.zeros_like(img)
+	contour_image = cv2.drawContours(img, smooth_contours, -1, (0,255,0), 10)
 
-pic = load_image("/home/benjamin/Documents/Projects/RAM/left.jpg")
+	return x_new, y_new
 
-epic = enhance_contrast(pic)
 
-eepic = convert_to_monotone(epic)
+outline = load_image("/home/benjamin/Documents/Projects/RAM/right2.jpg")
 
-epic.save("cont.jpg")
-eepic.save("mono.jpg")
+enhanced_outline = enhance_image(outline)
+enhanced_outline.save("enhanced.jpg")
+x,y = img2Array("/home/benjamin/Documents/Projects/RAM/enhanced.jpg")
+
+
+plt.imshow(outline)
+plt.plot(x, y, 'b--')
+plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+plt.show()
+
 
