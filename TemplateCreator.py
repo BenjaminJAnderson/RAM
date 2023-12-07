@@ -33,29 +33,25 @@ def vectorize_image(image):
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-	poly_contour = []
-	for contour in contours:
-		epsilon = 0.01 * cv2.arcLength(contour, True)
-		approx = cv2.approxPolyDP(contour, epsilon, True)
-		poly_contour.append(approx)
 
-	print(type(poly_contour))
-	print(poly_contour)
-	print(poly_contour[0])
-	print(poly_contour[0][0])
-	smooth_contours = []
-	for points in poly_contour[0]:
-			t = np.arange(len(points))
-			poly_degree = 3  # Adjust the polynomial degree as needed
-			coeffs = np.polyfit(t, points[:, 0], poly_degree), np.polyfit(t, points[:, 1], poly_degree)
-			t_new = np.linspace(0, len(points) - 1, 100)
-			x_smooth = np.polyval(coeffs[0], t_new)
-			y_smooth = np.polyval(coeffs[1], t_new)
-			smooth_contours.append(np.column_stack((x_smooth, y_smooth)).astype(np.int32))
+	epsilon = 0.01 * cv2.arcLength(contours[0], True)
+	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
+
+	# polyArr = list(poly_contour)
+	
+	# smooth_contours = []
+	# for points in poly_contour[0]:
+	# 		t = np.arange(len(points))
+	# 		poly_degree = 3  # Adjust the polynomial degree as needed
+	# 		coeffs = np.polyfit(t, points[:, 0], poly_degree), np.polyfit(t, points[:, 1], poly_degree)
+	# 		t_new = np.linspace(0, len(points) - 1, 100)
+	# 		x_smooth = np.polyval(coeffs[0], t_new)
+	# 		y_smooth = np.polyval(coeffs[1], t_new)
+	# 		smooth_contours.append(np.column_stack((x_smooth, y_smooth)).astype(np.int32))
 
 	print(poly_contour)
 	contour_image = np.zeros_like(img)
-	contour_image = cv2.drawContours(img, smooth_contours, -1, (0,255,0), 10)
+	contour_image = cv2.drawContours(img, [poly_contour], -1, (0,255,0), 10)
 
     
 
