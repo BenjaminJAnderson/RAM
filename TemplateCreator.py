@@ -2,9 +2,6 @@ from PIL import Image, ImageFilter, ImageEnhance
 import cv2
 import numpy as np
 from scipy.interpolate import splprep, splev
-import imutils
-
-
 from matplotlib import pyplot as plt
 
 def load_image(file_path):
@@ -36,32 +33,27 @@ def img2hole(image):
 	img = cv2.imread("enhanced_holes.jpg")
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	ret, im = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	contours, hierarchy  = cv2.findContours(im.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	
+	points = []
+	for contour in contours:
+		# Get the center of each contour
+		M = cv2.moments(contour)
+		if M["m00"] != 0:
+			cX = int(M["m10"] / M["m00"])
+			cY = int(M["m01"] / M["m00"])
+			points.append([cX, cY])
 
-	cnts = imutils.grab_contours(contours)
-	print("[INFO] {} unique contours found".format(len(cnts)))
+	# contour_image = cv2.drawContours(img, contours, -1, (0,255,0), 10)
 
-	contour_image = np.zeros_like(img)
-	for (i, c) in enumerate(cnts):
-		((x, y), _) = cv2.minEnclosingCircle(c)
-		contour_image = cv2.drawContours(img, [c], -1, (0, 255, 0), 10)
-
-	# epsilon = 0.008 * cv2.arcLength(contours[0], True)
-	# poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
-	# points = np.squeeze(poly_contour)
-	# point = np.mean(points.T, axis=1)
-
-	# contour_image = np.zeros_like(img)
-	# contour_image = cv2.drawContours(img, poly_contour, -1, (0,255,0), 10)
-
-	plt.subplot(121),plt.imshow(im,cmap = 'gray')
-	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
-	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	plt.show()
+	# plt.subplot(121),plt.imshow(im,cmap = 'gray')
+	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
+	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	# plt.show()
 
 
-	return point
+	return points
 
 def img2Outline(image):
 	enhancer = ImageEnhance.Contrast(image)
@@ -83,7 +75,6 @@ def img2Outline(image):
 	img = cv2.imread("enhanced_outline.jpg")
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
-	# ret, im = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 	plt.subplot(121),plt.imshow(enhanced_image,cmap = 'gray')
@@ -95,17 +86,10 @@ def img2Outline(image):
 	epsilon = 0.008 * cv2.arcLength(contours[0], True)
 	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
 
-	
-	smooth_contours = []
-
 	points = np.squeeze(poly_contour)
 	tck, u = splprep(points.T, u=None, s=0, per=1)   # Spline fitting
 	u_new = np.linspace(u.min(), u.max(), 1000)
 	x_new, y_new = splev(u_new, tck, der=0)
-
-
-	contour_image = np.zeros_like(img)
-	contour_image = cv2.drawContours(img, smooth_contours, -1, (0,255,0), 10)
 
 	return x_new, y_new
 
