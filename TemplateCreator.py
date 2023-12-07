@@ -2,6 +2,7 @@ from PIL import Image, ImageFilter, ImageEnhance
 import cv2
 import numpy as np
 from scipy.interpolate import splprep, splev
+import imutils
 
 
 from matplotlib import pyplot as plt
@@ -23,9 +24,7 @@ def img2hole(image):
 	for x in range(width):
 		for y in range(height):
 			pixel = enhanced_image.getpixel((x, y))
-			# Check if the pixel is not black
 			if pixel != (0, 0, 0):
-				# If it's not black, set it to white
 				enhanced_image.putpixel((x, y), (255, 255, 255))  # Set as white
 	dilated_image = enhanced_image.filter(ImageFilter.MaxFilter(size=5))
 	blurred_image = dilated_image.filter(ImageFilter.GaussianBlur(radius=10))
@@ -39,15 +38,23 @@ def img2hole(image):
 	ret, im = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	epsilon = 0.008 * cv2.arcLength(contours[0], True)
-	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
-	points = np.squeeze(poly_contour)
-	point = np.mean(points.T, axis=1)
+	cnts = imutils.grab_contours(contours)
+	print("[INFO] {} unique contours found".format(len(cnts)))
 
 	contour_image = np.zeros_like(img)
-	contour_image = cv2.drawContours(img, poly_contour, -1, (0,255,0), 10)
+	for (i, c) in enumerate(cnts):
+		((x, y), _) = cv2.minEnclosingCircle(c)
+		contour_image = cv2.drawContours(img, [c], -1, (0, 255, 0), 10)
 
-	plt.subplot(121),plt.imshow(image,cmap = 'gray')
+	# epsilon = 0.008 * cv2.arcLength(contours[0], True)
+	# poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
+	# points = np.squeeze(poly_contour)
+	# point = np.mean(points.T, axis=1)
+
+	# contour_image = np.zeros_like(img)
+	# contour_image = cv2.drawContours(img, poly_contour, -1, (0,255,0), 10)
+
+	plt.subplot(121),plt.imshow(im,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
 	plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
