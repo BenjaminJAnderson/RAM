@@ -21,12 +21,12 @@ def enhance_image(image, threshold=128):
 	threshold_image = enhanced_image.point(lambda p: 0 if p < threshold else 255, '1')
 	dilated_image = threshold_image.filter(ImageFilter.MaxFilter(size=3))
 
-	plt.subplot(121),plt.imshow(image,cmap = 'gray')
-	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(dilated_image,cmap = 'gray')
-	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	plt.show()
-	return enhanced_image
+	# plt.subplot(121),plt.imshow(image,cmap = 'gray')
+	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(122),plt.imshow(dilated_image,cmap = 'gray')
+	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	# plt.show()
+	return dilated_image
 
 def img2point(image):
 	pixel_data = np.array(image)
@@ -72,37 +72,42 @@ def img2point(image):
 def vectorize_image(image):
 	img = cv2.imread(image)
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	filtered = cv2.bilateralFilter(gray, 15, 75, 75)
-	blur = cv2.GaussianBlur(filtered, (9, 9), 0)
-	kernel = np.ones((10, 10), np.uint8) # Adjusting this helps
-	morph = cv2.morphologyEx(blur, cv2.MORPH_CLOSE, kernel)
-	edges = cv2.Canny(morph, 50, 150)
-	kernel = np.ones((10, 10), np.uint8)
-	dilated_edges = cv2.dilate(edges, kernel, iterations=1)
-	contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-	
-	smoothed_image = np.zeros_like(img)
+	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
+	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	largest_contour = max(contours, key=cv2.contourArea)
 
-	for contour in contours:
-		epsilon = 0.001 * cv2.arcLength(contour, True)
-		approx = cv2.approxPolyDP(contour, epsilon, True)
-		cv2.drawContours(smoothed_image, [approx], -1, (0, 255, 0), 2)
+	contour_image = np.zeros_like(img)
+	contour_image = cv2.drawContours(img, contours, -1, (0,255,0), 10)
 
-	plt.subplot(121),plt.imshow(img,cmap = 'gray')
+	# Extract contour coordinates
+	contour_coords = largest_contour.reshape(-1, 2)  # Reshape to get x, y coordinates
+
+	# Create a 2D array for the image vector
+	min_x, min_y = np.min(contour_coords, axis=0)
+	max_x, max_y = np.max(contour_coords, axis=0)
+	shape_width = max_x - min_x + 1
+	shape_height = max_y - min_y + 1
+
+	vector_image = np.zeros((shape_height, shape_width), dtype=np.uint8)
+	shifted_coords = contour_coords - [min_x, min_y]
+	cv2.drawContours(vector_image, [shifted_coords], -1, 255, thickness=cv2.FILLED)
+
+
+
+
+	plt.subplot(121),plt.imshow(im,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(dilated_edges,cmap = 'gray')
+	plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	plt.show()
 
-pic = load_image("/home/benjamin/Documents/Projects/RAM/right.jpg")
+# pic = load_image("/home/benjamin/Documents/Projects/RAM/Untitled1.jpg")
 
-epic = enhance_image(pic)
+# epic = enhance_image(pic)
 
 # point = img2point(epic)
 
 
-epic.save("cont.jpg")
-
-vector = vectorize_image("mono.jpg")
+vector = vectorize_image("/home/benjamin/Documents/Projects/RAM/Untitled1.jpg")
 # vector.save("vect.jpg")
 
