@@ -35,7 +35,7 @@ def img2Array(image):
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	epsilon = 0.0075 * cv2.arcLength(contours[0], True)
+	epsilon = 0.008 * cv2.arcLength(contours[0], True)
 	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
 
 	
