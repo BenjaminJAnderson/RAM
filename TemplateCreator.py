@@ -59,9 +59,24 @@ enhanced_outline = enhance_image(outline)
 enhanced_outline.save("enhanced.jpg")
 x,y = img2Array("/home/benjamin/Documents/Projects/RAM/enhanced.jpg")
 
+N_index = np.argmin(y)
+NX, NY = x[N_index], y[N_index]
+
+E_index = np.argmax(x)
+EX, EY = x[E_index], y[E_index]
+
+S_index = np.argmax(y)
+SX, SY= x[S_index], y[S_index]
+
+W_index = np.argmin(x)
+WX, WY = x[W_index], y[W_index]
 
 plt.imshow(outline)
-plt.plot(x, y, 'b--') 
+plt.plot(x, y, 'b--')
+plt.plot([NX,SX], [NY,SY], 'g--')
+plt.plot([EX,WX], [EY,WY], 'r--')
+# plt.plot([SX], SY, 'bo')
+# plt.plot(WX, WY, 'yo')
 plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 plt.show()
 
