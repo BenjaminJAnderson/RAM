@@ -47,7 +47,7 @@ def img2hole(image):
 			cY = int(M["m01"] / M["m00"])
 			points.append([cX, cY])
 
-	# contour_image = cv2.drawContours(img, contours, -1, (0,255,0), 10)
+	contour_image = cv2.drawContours(img, contours, -1, (0,255,0), 10)
 
 	# plt.subplot(121),plt.imshow(im,cmap = 'gray')
 	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
@@ -98,7 +98,7 @@ def img2Outline(image):
 
 
 if __name__ == "__main__":
-	path = "/home/benjamin/Documents/Projects/RAM/inputs/zack"
+	path = "/home/benjamin/Documents/Projects/RAM/inputs/mine"
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
 
@@ -111,7 +111,8 @@ if __name__ == "__main__":
 		drawing = load_image(file_path)
 
 		x_list,y_list = img2Outline(drawing)
-		x,y = img2hole(drawing)
+		try: x,y = img2hole(drawing)
+		except: print("Error: Please place two separate holes on the drawing.")
 
 		N_index = np.argmin(y_list)
 		E_index = np.argmax(x_list)
