@@ -97,6 +97,9 @@ def img2Outline(image):
 
 
 if __name__ == "__main__":
+
+	#TASKS:
+	# REMOVE MATPLOTLIB USES, INSTEAD BUILD DIRECTLY OF PILLOW WITH LINES, MAKE THEM SMALL ENOUGH TO APPEAR SMOOTH AND FOLLOWING A SPLINE OF THE DRAWING
 	path = "/home/benjamin/Documents/Projects/RAM/inputs/mine"
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
