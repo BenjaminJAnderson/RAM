@@ -99,13 +99,15 @@ def img2Outline(image):
 
 if __name__ == "__main__":
 	path = "/home/benjamin/Documents/Projects/RAM/inputs/zack"
-	output_path = os.path.join(path, "output")
-	os.makedirs(output_path, exist_ok=True) 
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
 
 	for jpg_file in jpg_files:
 		file_path = os.path.join(path, jpg_file)
+		folder = os.path.splitext(jpg_file)[0]
+		output_path = os.path.join(path, "output", folder)
+		os.makedirs(output_path, exist_ok=True) 
+		
 		drawing = load_image(file_path)
 
 		x_list,y_list = img2Outline(drawing)
