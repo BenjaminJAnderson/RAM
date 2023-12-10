@@ -100,6 +100,7 @@ if __name__ == "__main__":
 
 	#TASKS:
 	# REMOVE MATPLOTLIB USES, INSTEAD BUILD DIRECTLY OF PILLOW WITH LINES, MAKE THEM SMALL ENOUGH TO APPEAR SMOOTH AND FOLLOWING A SPLINE OF THE DRAWING
+	# Add ability to transform image of A4 paper to perfect dimensions with no distortion
 	path = "/home/benjamin/Documents/Projects/RAM/inputs/mine"
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
