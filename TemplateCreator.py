@@ -49,11 +49,11 @@ def img2hole(image):
 
 	contour_image = cv2.drawContours(img, contours, -1, (0,255,0), 10)
 
-	plt.subplot(121),plt.imshow(im,cmap = 'gray')
-	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
-	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	plt.show()
+	# plt.subplot(121),plt.imshow(im,cmap = 'gray')
+	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
+	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	# plt.show()
 
 	return np.transpose(points)
 
@@ -173,6 +173,6 @@ if __name__ == "__main__":
 
 
 		fig.savefig(f'{os.path.join(output_path, f"{jpg_file}")}', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
-		plt.show()
+		# plt.show()
 
 
