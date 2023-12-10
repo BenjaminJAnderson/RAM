@@ -170,7 +170,7 @@ if __name__ == "__main__":
 		ax.plot([BLHole, BRHole],[BottomY, BottomY], "ro", markersize=10)
 	
 		##################### BOTTOM MIDDLE HOLES #####################
-		ax.plot([(MLHole-BLHole)/2, (MRHole-BRHole)],[(MidY-BottomY)/2, (MidY-BottomY)/2], "ro", markersize=10)
+		ax.plot([(MLHole+BLHole)/2, (MRHole+BRHole)],[(MidY+BottomY)/2, (MidY+BottomY)/2], "ro", markersize=10)
 
 		##################### BOTTOM MIDDLE HOLES #####################
 		ax.plot([MLHole, MRHole],[MidY, MidY], "ro", markersize=10)
