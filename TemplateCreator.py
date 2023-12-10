@@ -95,6 +95,9 @@ def img2Outline(image):
 
 
 if __name__ == "__main__":
+	folder = "/home/benjamin/Documents/Projects/RAM/inputs/zack"
+
+
 	drawing = load_image("right.jpg")
 
 	x_list,y_list = img2Outline(drawing)
