@@ -168,8 +168,11 @@ if __name__ == "__main__":
 
 		##################### BOTTOM HOLES #####################
 		ax.plot([BLHole, BRHole],[BottomY, BottomY], "ro", markersize=10)
+	
+		##################### BOTTOM MIDDLE HOLES #####################
+		ax.plot([(MLHole-BLHole)/2, (MRHole-BRHole)],[(MidY-BottomY)/2, (MidY-BottomY)/2], "ro", markersize=10)
 
-		##################### MIDDLE HOLES #####################
+		##################### BOTTOM MIDDLE HOLES #####################
 		ax.plot([MLHole, MRHole],[MidY, MidY], "ro", markersize=10)
 
 		##################### TOP HOLES #####################
