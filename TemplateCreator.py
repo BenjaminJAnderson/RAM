@@ -47,7 +47,7 @@ def img2hole(image):
 			cY = int(M["m01"] / M["m00"])
 			points.append([cX, cY])
 
-	# contour_image = cv2.drawContours(img, contours, -1, (0,255,0), 10)
+	contour_image = cv2.drawContours(img, contours, -1, (0,255,0), 10)
 
 	# plt.subplot(121),plt.imshow(im,cmap = 'gray')
 	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
@@ -55,8 +55,7 @@ def img2hole(image):
 	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	# plt.show()
 
-
-	return points
+	return np.transpose(points)
 
 def img2Outline(image):
 	enhancer = ImageEnhance.Contrast(image)
@@ -98,7 +97,11 @@ def img2Outline(image):
 
 
 if __name__ == "__main__":
-	path = "/home/benjamin/Documents/Projects/RAM/inputs/zack"
+
+	#TASKS:
+	# REMOVE MATPLOTLIB USES, INSTEAD BUILD DIRECTLY OF PILLOW WITH LINES, MAKE THEM SMALL ENOUGH TO APPEAR SMOOTH AND FOLLOWING A SPLINE OF THE DRAWING
+	# Add ability to transform image of A4 paper to perfect dimensions with no distortion
+	path = "/home/benjamin/Documents/Projects/RAM/inputs/mine"
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
 
@@ -111,7 +114,8 @@ if __name__ == "__main__":
 		drawing = load_image(file_path)
 
 		x_list,y_list = img2Outline(drawing)
-		x,y = img2hole(drawing)
+		try: LHole,RHole = img2hole(drawing)
+		except: print("Error: Please place two separate holes on the drawing.")
 
 		N_index = np.argmin(y_list)
 		E_index = np.argmax(x_list)
@@ -164,12 +168,16 @@ if __name__ == "__main__":
 
 		##################### BOTTOM HOLES #####################
 		ax.plot([BLHole, BRHole],[BottomY, BottomY], "ro", markersize=10)
+	
+		##################### BOTTOM MIDDLE HOLES #####################
+		ax.plot([(MLHole+BLHole)/2, (MRHole+BRHole)/2],[(MidY+BottomY)/2, (MidY+BottomY)/2], "ro", markersize=10)
 
-		##################### MIDDLE HOLES #####################
+		##################### BOTTOM MIDDLE HOLES #####################
 		ax.plot([MLHole, MRHole],[MidY, MidY], "ro", markersize=10)
 
 		##################### TOP HOLES #####################
-		ax.plot(x,y, "ro", markersize=10)
+		ax.plot(LHole, RHole, "ro", markersize=10)
+
 
 		fig.savefig(f'{os.path.join(output_path, f"{jpg_file}")}', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
 		# plt.show()
