@@ -109,32 +109,33 @@ def max_distance_indices(points):
 	p1 = points[max_distance_idx[0]]
 	p2 = points[max_distance_idx[1]]
 	
-	# Calculate the line equation between p1 and p2 (y = mx + c)
-	m = (p2[1] - p1[1]) / (p2[0] - p1[0])  # Slope of the line
-	c = p1[1] - m * p1[0]  # Intercept of the line
+	# Find p3 (farthest point from the line between p1 & p2)
+	# Using vector mathematics to calculate distance from each point to the line
+	vec_p1p2 = np.array(p2) - np.array(p1)
+	distances_from_line = np.abs(np.cross(np.array(points) - np.array(p1), vec_p1p2) / np.linalg.norm(vec_p1p2))
+	max_distance_from_line_idx = np.argmax(distances_from_line)
+	p3 = points[max_distance_from_line_idx]
 
-	# Initialize p3 and p4 to None and maximum distances to the left and right respectively
-	p3 = None
-	p4 = None
-	max_dist_left = -np.inf
-	max_dist_right = -np.inf
+	# Find the perpendicular line passing through p3
+	a, b = -vec_p1p2[1], vec_p1p2[0]
+	c = -(a * p3[0] + b * p3[1])
 
-	for point in points:
-		# Calculate perpendicular distance of each point from the line
-		dist = abs(-m * point[0] + point[1] - c) / np.sqrt(m**2 + 1)
-
-		# Determine if the point is to the left or right of the line
-		# Check left side
-		if (point[0] < p1[0] and point[0] < p2[0]) or (point[0] > p1[0] and point[0] > p2[0]):
-			if dist > max_dist_left:
-				max_dist_left = dist
-				p3 = point
-		# Check right side
-		else:
-			if dist > max_dist_right:
-				max_dist_right = dist
-				p4 = point
+	# Check which side of the line each point lies on
+	side_of_line = np.sign(a * np.array(points)[:, 0] + b * np.array(points)[:, 1] + c)
 	
+	# Filter points on the opposite side of p1 & p2 for p4 calculation
+	opposite_side_idx = np.where(side_of_line != side_of_line[max_distance_from_line_idx])[0]
+	distances_to_perpendicular = np.abs(a * np.array(points)[opposite_side_idx, 0] + b * np.array(points)[opposite_side_idx, 1] + c) / np.sqrt(a**2 + b**2)
+	
+	# Find the closest point to the perpendicular line on the opposite side
+	closest_to_perpendicular_idx = opposite_side_idx[np.argmin(distances_to_perpendicular)]
+	p4 = points[closest_to_perpendicular_idx]
+
+	# print(p1,p2,p3,p4)
+	# print(distances_from_line)
+	print(max_distance_from_line_idx)
+	print(p3)
+	print(distances_to_perpendicular)
 	return (p1,p2,p3,p4)
 
 if __name__ == "__main__":
