@@ -102,11 +102,29 @@ def img2Outline(image):
 	return xy_coords, x_list, y_list
 
 def max_distance_indices(points):
-    points_array = np.array(points)
-    distances = np.linalg.norm(points_array[:, None] - points_array, axis=-1)
-    max_distance_idx = np.unravel_index(np.argmax(distances), distances.shape)
-    
-    return max_distance_idx
+	points_array = np.array(points)
+	distances = np.linalg.norm(points_array[:, None] - points_array, axis=-1)
+	max_distance_idx = np.unravel_index(np.argmax(distances), distances.shape)
+
+	p1 = points[max_distance_idx[0]]
+	p2 = points[max_distance_idx[1]]
+
+	line_vector = np.array(p2) - np.array(p1)
+
+	line_vector_norm = line_vector / np.linalg.norm(line_vector)
+
+	perpendicular_distances = []
+	for point in points_array:
+		vec_from_p1 = point - p1
+		projection = np.dot(vec_from_p1, line_vector_norm) * line_vector_norm
+		perpendicular_distances.append(np.linalg.norm(vec_from_p1 - projection))
+
+	# Get the indices of the points with the maximum perpendicular distance
+	max_perpendicular_idx = np.argsort(perpendicular_distances)[-2:]  # Two largest indices
+	p3 = points[max_perpendicular_idx[0]]
+	p4 = points[max_perpendicular_idx[1]]
+	
+	return (p1,p2,p3,p4)
 
 if __name__ == "__main__":
 
@@ -134,8 +152,7 @@ if __name__ == "__main__":
 		a4_x, a4_y = drawing.size 
 		pix2mmX, pix2mmY= 210/a4_x, 297/a4_y
 
-		max_i = max_distance_indices(outline)
-		print(max_ndices)
+		p1,p2,p3,p4 = max_distance_indices(outline)
 
 		N_index = np.argmin(y_list)
 		E_index = np.argmax(x_list)
@@ -175,10 +192,10 @@ if __name__ == "__main__":
 		draw.line(outline, fill="blue", width=10)
 
 		##################### HEIGHT & WIDTH INFO #####################
-		draw.line(((outline[max_i[0]][0], outline[max_i[0]][1]),(outline[max_i[1]][0], outline[max_i[1]][1])), fill="green", width=10)
+		draw.line(((p1[0], p1[1]),(p2[0], p2[1])), fill="green", width=10)
 		# draw.line(((EX, WX),(EY, WY)), fill="red", width=10)
 
-		font = ImageFont.truetype("arial.ttf", 24)  # Change the font and size if needed
+		font = ImageFont.truetype("DejaVuSans.ttf", 48)  # Change the font and size if needed
 
 		draw.text((50, 150),f"Width = {np.around(width * pix2mmX)}mm",fill="black", font=font)
 		draw.text((50, 300),f"Height = {np.around(height * pix2mmY)}mm",fill="black", font=font)
