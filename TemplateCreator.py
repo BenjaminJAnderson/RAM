@@ -56,7 +56,7 @@ def img2hole(image):
 	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	# plt.show()
 
-	return np.transpose(points)
+	return points
 
 def img2Outline(image):
 	enhancer = ImageEnhance.Contrast(image)
