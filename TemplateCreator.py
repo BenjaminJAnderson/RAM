@@ -102,7 +102,8 @@ def img2hole(image):
 	return points
 
 def img2Outline(image):
-	enhancer = ImageEnhance.Contrast(image)
+	grayscale_image = image.convert('L')
+	enhancer = ImageEnhance.Contrast(grayscale_image)
 	enhanced_image = enhancer.enhance(3)
 	# width, height = image.size
 	# for x in range(width):
@@ -112,9 +113,9 @@ def img2Outline(image):
 	# 		if (0, 0, 0) <= pixel <= (5, 5, 5):
 	# 			enhanced_image.putpixel((x, y), (255, 255, 255))  # Set as white
 	# dilated_image = enhanced_image.filter(ImageFilter.MaxFilter(size=5))
-	blurred_image = enhanced_image.filter(ImageFilter.GaussianBlur(radius=10))
-	grayscale_image = blurred_image.convert('L')
-	threshold_image = grayscale_image.point(lambda p: 0 if p < 255 else 255, '1')
+	# blurred_image = enhanced_image.filter(ImageFilter.GaussianBlur(radius=10))
+	# dilated_image = enhanced_image.filter(ImageFilter.MaxFilter(size=2))
+	threshold_image = enhanced_image.point(lambda p: 0 if p < 150 else 255, '1')
 
 	threshold_image.save(os.path.join(output_path, f"enhanced_outline_{jpg_file}"))
 
@@ -136,7 +137,7 @@ def img2Outline(image):
 	# x_new, y_new = splev(u_new, tck, der=0)
 
 	contour_image = cv2.drawContours(img, poly_contour, -1, (255,255,0), 10)
-	plt.subplot(121),plt.imshow(blurred_image,cmap = 'gray')
+	plt.subplot(121),plt.imshow(threshold_image,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
 	plt.subplot(122),plt.imshow(enhanced_image,cmap = 'gray')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
