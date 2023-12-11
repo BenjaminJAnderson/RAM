@@ -142,15 +142,13 @@ if __name__ == "__main__":
 		BottomY = SY - (height * 0.20)
 		PixelGap = 75
 
-		tolerance = a4_y*0.05  # 5% tolerance on a4 y dimension
+		tolerance = a4_y*0.15  # 15% tolerance on a4 y dimension
 
 		# Find indices of points within the tolerance of userY
 		indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
 		print(tolerance)
 		print(indices_close)
 		print(x_list[indices_close])
-		# for index in indices_close:
-		# 	if left_x = x_list[index]
 
 		BLHole = min(x_list[indices_close]) + PixelGap
 		BRHole = max(x_list[indices_close]) - PixelGap
@@ -172,33 +170,30 @@ if __name__ == "__main__":
 		draw.line(((NX, SX),(NY, SY)), fill="green", width=10)
 		draw.line(((EX, WX),(EY, WY)), fill="red", width=10)
 
-		font = ImageFont.truetype("sans-serif.ttf", 16)
-		draw.text((50, 150),f"Width = {np.around(width * pix2mmX)}mm",(255,255,255),font=font)
-		draw.text((50, 300),f"Height = {np.around(height * pix2mmY)}mm",(255,255,255),font=font)
+		draw.text((50, 150),f"Width = {np.around(width * pix2mmX)}mm",(255,255,255))
+		draw.text((50, 300),f"Height = {np.around(height * pix2mmY)}mm",(255,255,255))
 
 		##################### OUTLINE & STITCHLINE #####################
 		# ax.plot(x_list, y_list, linestyle='solid', linewidth=15, color='black')
 		# ax.plot(x_list, y_list, linestyle='dotted', linewidth=2, color='white')
 
 		##################### BOTTOM HOLES #####################
-		draw.ellipse((BLHole,BottomY), fill="red")
-		draw.ellipse((BRHole,BottomY), fill="red")
-		# ax.plot([BLHole, BRHole],[BottomY, BottomY], "ro", markersize=10)
+		radius = 50
+		
+		draw.ellipse((BLHole - radius, BottomY - radius, BLHole + radius, BottomY + radius), fill="red")
+		draw.ellipse((BRHole - radius,BottomY - radius, BRHole + radius,BottomY + radius), fill="red")
 	
 		##################### BOTTOM MIDDLE HOLES #####################
-		draw.ellipse(((MLHole+BLHole)/2,(MidY+BottomY)/2), fill="red")
-		draw.ellipse(((MRHole+BRHole)/2,(MidY+BottomY)/2), fill="red")
-		# ax.plot([(MLHole+BLHole)/2, (MRHole+BRHole)/2],[(MidY+BottomY)/2, (MidY+BottomY)/2], "ro", markersize=10)
+		draw.ellipse(((MLHole+BLHole)/2 - radius,(MidY+BottomY)/2 - radius, (MLHole+BLHole)/2 + radius,(MidY+BottomY)/2 + radius), fill="red")
+		draw.ellipse(((MRHole+BRHole)/2 - radius,(MidY+BottomY)/2 - radius, (MRHole+BRHole)/2 + radius,(MidY+BottomY)/2 + radius), fill="red")
 
-		##################### BOTTOM MIDDLE HOLES #####################
-		draw.ellipse((MLHole,MidY), fill="red")
-		draw.ellipse((MRHole,MidY), fill="red")
-		# ax.plot([MLHole, MRHole],[MidY, MidY], "ro", markersize=10)
+		# ##################### BOTTOM MIDDLE HOLES #####################
+		draw.ellipse((MLHole - radius, MidY - radius, MLHole + radius, MidY + radius), fill="red")
+		draw.ellipse((MRHole - radius, MidY - radius, MRHole + radius, MidY + radius), fill="red")
 
-		##################### TOP HOLES #####################
-		draw.ellipse((LHole), fill="red")
-		draw.ellipse((RHole), fill="red")
-		# ax.plot(LHole, RHole, "ro", markersize=10)
+		# ##################### TOP HOLES #####################
+		draw.ellipse((LHole[0] - radius, LHole[1] - radius, LHole[0] + radius, LHole[1] + radius), fill="red")
+		draw.ellipse((RHole[0] - radius, RHole[1] - radius, RHole[0] + radius, RHole[1] + radius), fill="red")
 
 		output_image.save(f'{os.path.join(output_path, f"{jpg_file}")}')
 		# fig.savefig(f'{os.path.join(output_path, f"{jpg_file}")}', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
