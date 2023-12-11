@@ -83,7 +83,8 @@ def img2Outline(image):
 	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
 
 	points = np.squeeze(poly_contour, axis=1)
-	points = [(x, y) for x, y in points]
+	points = np.vstack([points, points[0]])
+	xy_coords = [(x, y) for x, y in points]
 	# tck, u = splprep(points.T, u=None, s=0, per=1)   # Spline fitting
 	# u_new = np.linspace(u.min(), u.max(), 1000)
 	# x_new, y_new = splev(u_new, tck, der=0)
@@ -95,7 +96,7 @@ def img2Outline(image):
 	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	# plt.show()
 
-	return points
+	return xy_coords
 
 
 if __name__ == "__main__":
@@ -154,26 +155,12 @@ if __name__ == "__main__":
 
 		##################### IMAGE #####################
 		width, hgt = drawing.size 
+		print(outline)
 		output_image = Image.new("RGB", (width, hgt), color="white")
 		draw = ImageDraw.Draw(output_image)
 
-		print(outline)
-
-
-		points_array = [( 625,  221),
-						( 351,  555),
-						( 303, 1056),
-						( 502, 2029),
-						( 527, 2870),
-						( 811, 3270),
-						(1018, 3280),
-						(1303, 3159),
-						(1490, 2843),
-						(1589,  932),
-						(1351,  555)]
-
 		# Draw the polygon on the copied image
-		draw.polygon(outline, outline="black", fill="blue")
+		draw.line(outline, fill="blue", width=3)
 
 		output_image.save(f'{os.path.join(output_path, f"{jpg_file}")}')
 
