@@ -22,7 +22,6 @@ def preprocess_image(image_path):
 	# Read the image
 	img = cv2.imread(image_path)
 	cv2.imwrite(os.path.join(output_path, "original.jpg"), img)
-	cv2.imwrite(os.path.join(output_path, "original2.jpg"), img)
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -52,11 +51,11 @@ def preprocess_image(image_path):
 	matrix = cv2.getPerspectiveTransform(paper_pts, dst_pts)
 	warped = cv2.warpPerspective(img, matrix, (width, height))
 
-	plt.subplot(121),plt.imshow(img,cmap = 'gray')
-	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(warped,cmap = 'gray')
-	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	plt.show()
+	# plt.subplot(121),plt.imshow(img,cmap = 'gray')
+	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(122),plt.imshow(warped,cmap = 'gray')
+	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	# plt.show()
 
 	cv2.imwrite(os.path.join(output_path, jpg_file), warped)
 	
@@ -105,15 +104,15 @@ def img2hole(image):
 def img2Outline(image):
 	enhancer = ImageEnhance.Contrast(image)
 	enhanced_image = enhancer.enhance(3)
-	width, height = image.size
-	for x in range(width):
-		for y in range(height):
-			pixel = enhanced_image.getpixel((x, y))
-			# Check if the pixel is not black
-			if (0, 0, 0) <= pixel <= (5, 5, 5):
-				enhanced_image.putpixel((x, y), (255, 255, 255))  # Set as white
-	dilated_image = enhanced_image.filter(ImageFilter.MaxFilter(size=5))
-	blurred_image = dilated_image.filter(ImageFilter.GaussianBlur(radius=10))
+	# width, height = image.size
+	# for x in range(width):
+	# 	for y in range(height):
+	# 		pixel = enhanced_image.getpixel((x, y))
+	# 		# Check if the pixel is not black
+	# 		if (0, 0, 0) <= pixel <= (5, 5, 5):
+	# 			enhanced_image.putpixel((x, y), (255, 255, 255))  # Set as white
+	# dilated_image = enhanced_image.filter(ImageFilter.MaxFilter(size=5))
+	blurred_image = enhanced_image.filter(ImageFilter.GaussianBlur(radius=10))
 	grayscale_image = blurred_image.convert('L')
 	threshold_image = grayscale_image.point(lambda p: 0 if p < 255 else 255, '1')
 
@@ -137,9 +136,9 @@ def img2Outline(image):
 	# x_new, y_new = splev(u_new, tck, der=0)
 
 	contour_image = cv2.drawContours(img, poly_contour, -1, (255,255,0), 10)
-	plt.subplot(121),plt.imshow(enhanced_image,cmap = 'gray')
+	plt.subplot(121),plt.imshow(blurred_image,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
+	plt.subplot(122),plt.imshow(enhanced_image,cmap = 'gray')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	plt.show()
 
