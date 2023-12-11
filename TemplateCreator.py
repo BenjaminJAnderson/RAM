@@ -17,6 +17,47 @@ def load_image(file_path):
 		print("Unable to load image")
 		return None
 
+
+def preprocess_image(image_path):
+    # Read the image
+    img = cv2.imread(image_path)
+    
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+    # Apply Gaussian blur to reduce noise
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    
+    # Detect edges using Canny edge detection
+    edges = cv2.Canny(blurred, 50, 150)
+    
+    # Find contours
+    contours, _ = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]  # Select largest contours
+    
+    for contour in contours:
+        # Approximate the contour
+        peri = cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
+        
+        if len(approx) == 4:  # If it's a rectangle (A4 paper has 4 corners)
+            paper_contour = approx
+            break
+    
+    # Draw the contour on the image
+    cv2.drawContours(img, [paper_contour], -1, (0, 255, 0), 2)
+    
+    # Apply perspective transform to get a top-down view
+    paper_pts = np.float32([paper_contour[0][0], paper_contour[1][0], paper_contour[2][0], paper_contour[3][0]])
+    width = 210  # A4 width in mm
+    height = 297  # A4 height in mm
+    dst_pts = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
+    
+    matrix = cv2.getPerspectiveTransform(paper_pts, dst_pts)
+    warped = cv2.warpPerspective(img, matrix, (width, height))
+    
+    return warped
+
 def img2hole(image):
 	enhancer = ImageEnhance.Contrast(image)
 	enhanced_image = enhancer.enhance(3)
@@ -169,7 +210,7 @@ if __name__ == "__main__":
 	#ALSO LET PEOPLE INPUT THEIR OWN X, Y REFERENCE FOR SIZE OF PAPER, SO IT CAN BE ANY SIZE BASED OF THE PAPER AS A REFERENCE
 	#Improve the smoothing of the drawings spline, try doing high resolution spline to smooth rather than straight to smooth from like 4 points
 	# 
-	path = "/home/benjamin/Documents/Projects/RAM/inputs/mine"
+	path = "/home/benjamin/Documents/Projects/RAM/inputs/mum"
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
 
