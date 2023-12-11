@@ -19,44 +19,60 @@ def load_image(file_path):
 
 
 def preprocess_image(image_path):
-    # Read the image
-    img = cv2.imread(image_path)
-    
-    # Convert the image to grayscale
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    
-    # Apply Gaussian blur to reduce noise
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    
-    # Detect edges using Canny edge detection
-    edges = cv2.Canny(blurred, 50, 150)
-    
-    # Find contours
-    contours, _ = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]  # Select largest contours
-    
-    for contour in contours:
-        # Approximate the contour
-        peri = cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
-        
-        if len(approx) == 4:  # If it's a rectangle (A4 paper has 4 corners)
-            paper_contour = approx
-            break
-    
-    # Draw the contour on the image
-    cv2.drawContours(img, [paper_contour], -1, (0, 255, 0), 2)
-    
-    # Apply perspective transform to get a top-down view
-    paper_pts = np.float32([paper_contour[0][0], paper_contour[1][0], paper_contour[2][0], paper_contour[3][0]])
-    width = 210  # A4 width in mm
-    height = 297  # A4 height in mm
-    dst_pts = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
-    
-    matrix = cv2.getPerspectiveTransform(paper_pts, dst_pts)
-    warped = cv2.warpPerspective(img, matrix, (width, height))
-    
-    return warped
+	# Read the image
+	img = cv2.imread(image_path)
+	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	invGamma = 1.0 / 0.3
+	table = np.array([((i / 255.0) ** invGamma) * 255
+				  for i in np.arange(0, 256)]).astype("uint8")
+	gray = cv2.LUT(gray, table)
+	ret, thresh1 = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY)
+	contours, hierachy = cv2.findContours(thresh1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+	def biggestRectangle(conts):
+		biggest = None
+		max_area = 0
+		indexReturn = -1
+		for index in range(len(conts)):
+			i = conts[index]
+			area = cv2.contourArea(i)
+			if area > 100:
+				peri = cv2.arcLength(i, True)
+				approx = cv2.approxPolyDP(i, 0.01 * peri, True)
+				if area > max_area and len(approx) == 4:
+					biggest = approx
+					max_area = area
+					indexReturn = index
+		return indexReturn
+
+	indexReturn = biggestRectangle(contours)
+	hull = cv2.convexHull(contours[indexReturn])
+	cv2.drawContours(img, [hull], 0, (0, 255, 0), 3)
+
+	plt.subplot(121),plt.imshow(img,cmap = 'gray')
+	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	plt.subplot(122),plt.imshow(thresh1,cmap = 'gray')
+	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	plt.show()
+
+# copyImg = img.copy()
+
+# cv2.imwrite(os.path.join('path_to_save', imageName),
+#             cv2.drawContours(img, [hull], 0, (0, 255, 0), 3))
+
+
+
+# 	# Apply perspective transform to get a top-down view
+# 	paper_pts = np.float32([approx[0][0], approx[1][0], approx[2][0], approx[3][0]])
+# 	width = 210  # A4 width in mm
+# 	height = 297  # A4 height in mm
+# 	dst_pts = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
+	
+# 	matrix = cv2.getPerspectiveTransform(paper_pts, dst_pts)
+# 	warped = cv2.warpPerspective(img, matrix, (width, height))
+
+# 	cv2.imwrite("test.jpg", warped)
+	
 
 def img2hole(image):
 	enhancer = ImageEnhance.Contrast(image)
@@ -211,88 +227,92 @@ if __name__ == "__main__":
 	#Improve the smoothing of the drawings spline, try doing high resolution spline to smooth rather than straight to smooth from like 4 points
 	# 
 	path = "/home/benjamin/Documents/Projects/RAM/inputs/mum"
+	drawing = load_image("/home/benjamin/Documents/Projects/RAM/inputs/mum/left.jpg")
+	preprocess_image("/home/benjamin/Documents/Projects/RAM/inputs/mum/left.jpg")
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
 
-	for jpg_file in jpg_files:
-		file_path = os.path.join(path, jpg_file)
-		folder = os.path.splitext(jpg_file)[0]
-		output_path = os.path.join(path, "output", folder)
-		os.makedirs(output_path, exist_ok=True) 
+
+
+	# for jpg_file in jpg_files:
+	# 	file_path = os.path.join(path, jpg_file)
+	# 	folder = os.path.splitext(jpg_file)[0]
+	# 	output_path = os.path.join(path, "output", folder)
+	# 	os.makedirs(output_path, exist_ok=True) 
 		
-		drawing = load_image(file_path)
+	# 	drawing = load_image(file_path)
 
-		outline, x_list, y_list = img2Outline(drawing)
-		try: LHole,RHole = img2hole(drawing)
-		except: print("Error: Please place two separate holes on the drawing.")
+	# 	outline, x_list, y_list = img2Outline(drawing)
+	# 	try: LHole,RHole = img2hole(drawing)
+	# 	except: print("Error: Please place two separate holes on the drawing.")
 
-		a4_x, a4_y = drawing.size 
-		pix2mmX, pix2mmY= 210/a4_x, 297/a4_y
+	# 	a4_x, a4_y = drawing.size 
+	# 	pix2mmX, pix2mmY= 210/a4_x, 297/a4_y
 
-		north,east,south,west = compass(outline)
+	# 	north,east,south,west = compass(outline)
 
 
-		width = np.sqrt((east[0] - west[0])**2 + (east[1] - west[1])**2)
-		height = np.sqrt((north[0] - south[0])**2 + (north[1] - south[1])**2)
+	# 	width = np.sqrt((east[0] - west[0])**2 + (east[1] - west[1])**2)
+	# 	height = np.sqrt((north[0] - south[0])**2 + (north[1] - south[1])**2)
 
-		#Bottom holes
-		BottomY = south[1] - (height * 0.20)
-		PixelGap = 75
+	# 	#Bottom holes
+	# 	BottomY = south[1] - (height * 0.20)
+	# 	PixelGap = 75
 
-		tolerance = a4_y*0.15  # 15% tolerance on a4 y dimension
+	# 	tolerance = a4_y*0.15  # 15% tolerance on a4 y dimension
 
-		# Find indices of points within the tolerance of userY
-		indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
+	# 	# Find indices of points within the tolerance of userY
+	# 	indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
 
-		BLHole = min(x_list[indices_close]) + PixelGap
-		BRHole = max(x_list[indices_close]) - PixelGap
+	# 	BLHole = min(x_list[indices_close]) + PixelGap
+	# 	BRHole = max(x_list[indices_close]) - PixelGap
 
-		#Middle holes
-		MidY = south[1] - (height * 0.45)
-		indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
-		MLHole = min(x_list[indices_close]) + PixelGap
-		MRHole = max(x_list[indices_close]) - PixelGap
+	# 	#Middle holes
+	# 	MidY = south[1] - (height * 0.45)
+	# 	indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
+	# 	MLHole = min(x_list[indices_close]) + PixelGap
+	# 	MRHole = max(x_list[indices_close]) - PixelGap
 
-		##################### IMAGE #####################
-		output_image = Image.new("RGB", (a4_x, a4_y), color="white")
-		draw = ImageDraw.Draw(output_image)
+	# 	##################### IMAGE #####################
+	# 	output_image = Image.new("RGB", (a4_x, a4_y), color="white")
+	# 	draw = ImageDraw.Draw(output_image)
 
-		# Draw the polygon on the copied image
-		draw.line(outline, fill="blue", width=10)
+	# 	# Draw the polygon on the copied image
+	# 	draw.line(outline, fill="blue", width=10)
 
-		##################### HEIGHT & WIDTH INFO #####################
-		draw.line(((north[0], north[1]),(south[0], south[1])), fill="green", width=10)
-		draw.line(((east[0], east[1]),(west[0], west[1])), fill="red", width=10)
+	# 	##################### HEIGHT & WIDTH INFO #####################
+	# 	draw.line(((north[0], north[1]),(south[0], south[1])), fill="green", width=10)
+	# 	draw.line(((east[0], east[1]),(west[0], west[1])), fill="red", width=10)
 
-		font = ImageFont.truetype("DejaVuSans.ttf", 48)  # Change the font and size if needed
+	# 	font = ImageFont.truetype("DejaVuSans.ttf", 48)  # Change the font and size if needed
 
-		draw.text((50, 150),f"Width = {np.around(width * pix2mmX)}mm",fill="black", font=font)
-		draw.text((50, 300),f"Height = {np.around(height * pix2mmY)}mm",fill="black", font=font)
+	# 	draw.text((50, 150),f"Width = {np.around(width * pix2mmX)}mm",fill="black", font=font)
+	# 	draw.text((50, 300),f"Height = {np.around(height * pix2mmY)}mm",fill="black", font=font)
 
-		##################### OUTLINE & STITCHLINE #####################
-		# ax.plot(x_list, y_list, linestyle='solid', linewidth=15, color='black')
-		# ax.plot(x_list, y_list, linestyle='dotted', linewidth=2, color='white')
+	# 	##################### OUTLINE & STITCHLINE #####################
+	# 	# ax.plot(x_list, y_list, linestyle='solid', linewidth=15, color='black')
+	# 	# ax.plot(x_list, y_list, linestyle='dotted', linewidth=2, color='white')
 
-		##################### BOTTOM HOLES #####################
-		radius = 50
+	# 	##################### BOTTOM HOLES #####################
+	# 	radius = 50
 		
-		draw.ellipse((BLHole - radius, BottomY - radius, BLHole + radius, BottomY + radius), fill="red")
-		draw.ellipse((BRHole - radius,BottomY - radius, BRHole + radius,BottomY + radius), fill="red")
+	# 	draw.ellipse((BLHole - radius, BottomY - radius, BLHole + radius, BottomY + radius), fill="red")
+	# 	draw.ellipse((BRHole - radius,BottomY - radius, BRHole + radius,BottomY + radius), fill="red")
 	
-		##################### BOTTOM MIDDLE HOLES #####################
-		draw.ellipse(((MLHole+BLHole)/2 - radius,(MidY+BottomY)/2 - radius, (MLHole+BLHole)/2 + radius,(MidY+BottomY)/2 + radius), fill="red")
-		draw.ellipse(((MRHole+BRHole)/2 - radius,(MidY+BottomY)/2 - radius, (MRHole+BRHole)/2 + radius,(MidY+BottomY)/2 + radius), fill="red")
+	# 	##################### BOTTOM MIDDLE HOLES #####################
+	# 	draw.ellipse(((MLHole+BLHole)/2 - radius,(MidY+BottomY)/2 - radius, (MLHole+BLHole)/2 + radius,(MidY+BottomY)/2 + radius), fill="red")
+	# 	draw.ellipse(((MRHole+BRHole)/2 - radius,(MidY+BottomY)/2 - radius, (MRHole+BRHole)/2 + radius,(MidY+BottomY)/2 + radius), fill="red")
 
-		# ##################### BOTTOM MIDDLE HOLES #####################
-		draw.ellipse((MLHole - radius, MidY - radius, MLHole + radius, MidY + radius), fill="red")
-		draw.ellipse((MRHole - radius, MidY - radius, MRHole + radius, MidY + radius), fill="red")
+	# 	# ##################### BOTTOM MIDDLE HOLES #####################
+	# 	draw.ellipse((MLHole - radius, MidY - radius, MLHole + radius, MidY + radius), fill="red")
+	# 	draw.ellipse((MRHole - radius, MidY - radius, MRHole + radius, MidY + radius), fill="red")
 
-		# ##################### TOP HOLES #####################
-		draw.ellipse((LHole[0] - radius, LHole[1] - radius, LHole[0] + radius, LHole[1] + radius), fill="red")
-		draw.ellipse((RHole[0] - radius, RHole[1] - radius, RHole[0] + radius, RHole[1] + radius), fill="red")
+	# 	# ##################### TOP HOLES #####################
+	# 	draw.ellipse((LHole[0] - radius, LHole[1] - radius, LHole[0] + radius, LHole[1] + radius), fill="red")
+	# 	draw.ellipse((RHole[0] - radius, RHole[1] - radius, RHole[0] + radius, RHole[1] + radius), fill="red")
 
-		output_image.save(f'{os.path.join(output_path, f"{jpg_file}")}')
-		# fig.savefig(f'{os.path.join(output_path, f"{jpg_file}")}', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
-		# plt.show()
+	# 	output_image.save(f'{os.path.join(output_path, f"{jpg_file}")}')
+	# 	# fig.savefig(f'{os.path.join(output_path, f"{jpg_file}")}', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
+	# 	# plt.show()
 
 
