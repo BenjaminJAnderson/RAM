@@ -36,41 +36,21 @@ def preprocess_image(image_path):
 
 	contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-# Approximate the contours to find the corners
-	for contour in contours:
-		epsilon = 0.04 * cv2.arcLength(contour, True)
-		approx = cv2.approxPolyDP(contour, epsilon, True)
-
-		# If the contour has 4 corners (A4 paper), draw and display the corners
-		if len(approx) == 4:
-			cv2.drawContours(img, [approx], -1, (0, 255, 0), 2)
-			for point in approx:
-				x, y = point[0]
-				cv2.circle(img, (x, y), 5, (255, 0, 0), -1)
-
-	plt.subplot(121),plt.imshow(thresh,cmap = 'gray')
-	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(img,cmap = 'gray')
-	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	plt.show()
-
-# copyImg = img.copy()
-
-# cv2.imwrite(os.path.join('path_to_save', imageName),
-#             cv2.drawContours(img, [hull], 0, (0, 255, 0), 3))
+	# Approximate the contours to find the corners
+	epsilon = 0.04 * cv2.arcLength(contours[0], True)
+	approx = cv2.approxPolyDP(contours[0], epsilon, True)
 
 
-
-# 	# Apply perspective transform to get a top-down view
-# 	paper_pts = np.float32([approx[0][0], approx[1][0], approx[2][0], approx[3][0]])
-# 	width = 210  # A4 width in mm
-# 	height = 297  # A4 height in mm
-# 	dst_pts = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
+	# Apply perspective transform to get a top-down view
+	paper_pts = np.float32([approx[1][0], approx[0][0], approx[3][0], approx[2][0]])
+	width = 210  # A4 width in mm
+	height = 297  # A4 height in mm
+	dst_pts = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
 	
-# 	matrix = cv2.getPerspectiveTransform(paper_pts, dst_pts)
-# 	warped = cv2.warpPerspective(img, matrix, (width, height))
+	matrix = cv2.getPerspectiveTransform(paper_pts, dst_pts)
+	warped = cv2.warpPerspective(img, matrix, (width, height))
 
-# 	cv2.imwrite("test.jpg", warped)
+	cv2.imwrite("test.jpg", warped)
 	
 
 def img2hole(image):
