@@ -113,19 +113,31 @@ def max_distance_indices(points):
 
 	line_vector_norm = line_vector / np.linalg.norm(line_vector)
 	
-	# Find the equation of the line passing through p1 and p2: ax + by + c = 0
-	a = p2[1] - p1[1]
-	b = p1[0] - p2[0]
-	c = p2[0] * p1[1] - p1[0] * p2[1]
+	p3 = None
+	p4 = None
+	max_dist_left = -np.inf
+	max_dist_right = -np.inf
 
-	# Calculate the distance of each point from the line
-	distances_from_line = np.abs(a * points_array[:, 0] + b * points_array[:, 1] + c) / np.sqrt(a**2 + b**2)
-
-	# Find the indices of the points with maximum distance from the line
-	max_dist_indices = np.argsort(distances_from_line)[-2:]  # Get indices of two farthest points
-
-	p3 = points[max_dist_indices[0]]
-	p4 = points[max_dist_indices[1]]
+	for point in points:
+		if not np.array_equal(point, p1) and not np.array_equal(point, p2):
+			# Vector from p1 to the current point
+			vector_to_point = np.array(point) - np.array(p1)
+			
+			# Calculate cross product to determine position relative to the line
+			cross_product = np.cross(line_vector_norm, vector_to_point)
+			
+			# If cross product is negative, the point is to the left of the line
+			if cross_product < 0:
+				distance_left = np.abs(np.dot(line_vector_norm, vector_to_point))
+				if distance_left > max_dist_left:
+					max_dist_left = distance_left
+					p3 = point
+			# If cross product is positive, the point is to the right of the line
+			elif cross_product > 0:
+				distance_right = np.abs(np.dot(line_vector_norm, vector_to_point))
+				if distance_right > max_dist_right:
+					max_dist_right = distance_right
+					p4 = point
 	
 	return (p1,p2,p3,p4)
 
