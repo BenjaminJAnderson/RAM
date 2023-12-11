@@ -101,12 +101,20 @@ def img2Outline(image):
 
 	return xy_coords, x_list, y_list
 
+def max_distance_indices(points):
+    points_array = np.array(points)
+    distances = np.linalg.norm(points_array[:, None] - points_array, axis=-1)
+    max_distance_idx = np.unravel_index(np.argmax(distances), distances.shape)
+    
+    return max_distance_idx
 
 if __name__ == "__main__":
 
 	#TASKS:
 	# Add ability to transform image of A4 paper to perfect dimensions with no distortion
+	#ALSO LET PEOPLE INPUT THEIR OWN X, Y REFERENCE FOR SIZE OF PAPER, SO IT CAN BE ANY SIZE BASED OF THE PAPER AS A REFERENCE
 	#Improve the smoothing of the drawings spline, try doing high resolution spline to smooth rather than straight to smooth from like 4 points
+	# 
 	path = "/home/benjamin/Documents/Projects/RAM/inputs/mine"
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
@@ -125,6 +133,9 @@ if __name__ == "__main__":
 
 		a4_x, a4_y = drawing.size 
 		pix2mmX, pix2mmY= 210/a4_x, 297/a4_y
+
+		max_i = max_distance_indices(outline)
+		print(max_ndices)
 
 		N_index = np.argmin(y_list)
 		E_index = np.argmax(x_list)
@@ -146,9 +157,6 @@ if __name__ == "__main__":
 
 		# Find indices of points within the tolerance of userY
 		indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
-		print(tolerance)
-		print(indices_close)
-		print(x_list[indices_close])
 
 		BLHole = min(x_list[indices_close]) + PixelGap
 		BRHole = max(x_list[indices_close]) - PixelGap
@@ -167,11 +175,13 @@ if __name__ == "__main__":
 		draw.line(outline, fill="blue", width=10)
 
 		##################### HEIGHT & WIDTH INFO #####################
-		draw.line(((NX, SX),(NY, SY)), fill="green", width=10)
-		draw.line(((EX, WX),(EY, WY)), fill="red", width=10)
+		draw.line(((outline[max_i[0]][0], outline[max_i[0]][1]),(outline[max_i[1]][0], outline[max_i[1]][1])), fill="green", width=10)
+		# draw.line(((EX, WX),(EY, WY)), fill="red", width=10)
 
-		draw.text((50, 150),f"Width = {np.around(width * pix2mmX)}mm",(255,255,255))
-		draw.text((50, 300),f"Height = {np.around(height * pix2mmY)}mm",(255,255,255))
+		font = ImageFont.truetype("arial.ttf", 24)  # Change the font and size if needed
+
+		draw.text((50, 150),f"Width = {np.around(width * pix2mmX)}mm",fill="black", font=font)
+		draw.text((50, 300),f"Height = {np.around(height * pix2mmY)}mm",fill="black", font=font)
 
 		##################### OUTLINE & STITCHLINE #####################
 		# ax.plot(x_list, y_list, linestyle='solid', linewidth=15, color='black')
