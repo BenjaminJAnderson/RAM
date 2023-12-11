@@ -3,8 +3,9 @@ import cv2
 import numpy as np
 
 from matplotlib import pyplot as plt
-from PIL import Image, ImageFilter, ImageEnhance
 from scipy.interpolate import splprep, splev
+from PIL import Image, ImageFilter, ImageEnhance, ImageDraw, ImageFont
+
 
 
 def load_image(file_path):
@@ -55,7 +56,7 @@ def img2hole(image):
 	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	# plt.show()
 
-	return np.transpose(points)
+	return points
 
 def img2Outline(image):
 	enhancer = ImageEnhance.Contrast(image)
@@ -79,28 +80,95 @@ def img2Outline(image):
 	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
 	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-	# plt.subplot(121),plt.imshow(enhanced_image,cmap = 'gray')
-	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	# plt.subplot(122),plt.imshow(threshold_image,cmap = 'gray')
-	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	# plt.show()
-
 	epsilon = 0.005 * cv2.arcLength(contours[0], True)
 	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
 
-	points = np.squeeze(poly_contour)
-	tck, u = splprep(points.T, u=None, s=0, per=1)   # Spline fitting
-	u_new = np.linspace(u.min(), u.max(), 1000)
-	x_new, y_new = splev(u_new, tck, der=0)
+	points = np.squeeze(poly_contour, axis=1)
+	points = np.vstack([points, points[0]])
+	x_list = points[:, 0]
+	y_list = points[:, 1]
+	xy_coords = [(x, y) for x, y in points]
+	# tck, u = splprep(points.T, u=None, s=0, per=1)   # Spline fitting
+	# u_new = np.linspace(u.min(), u.max(), 1000)
+	# x_new, y_new = splev(u_new, tck, der=0)
 
-	return x_new, y_new
+	# contour_image = cv2.drawContours(img, poly_contour, -1, (255,255,0), 10)
+	# plt.subplot(121),plt.imshow(enhanced_image,cmap = 'gray')
+	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	# plt.subplot(122),plt.imshow(contour_image,cmap = 'gray')
+	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	# plt.show()
 
+	return xy_coords, x_list, y_list
+
+def compass(points):
+	points_array = np.array(points)
+	distances = np.linalg.norm(points_array[:, None] - points_array, axis=-1)
+	max_distance_idx = np.unravel_index(np.argmax(distances), distances.shape)
+
+	p1 = points[max_distance_idx[0]]
+	p2 = points[max_distance_idx[1]]
+	
+	# Finding p3, farthest point from line formed by p1 and p2
+	p3 = None
+	max_dist = -1
+	for idx, point in enumerate(points):
+		if idx != max_distance_idx[0] and idx != max_distance_idx[1]:
+			dist = np.abs(np.cross(np.array(p2) - np.array(p1), np.array(point) - np.array(p1))) / np.linalg.norm(
+				np.array(p2) - np.array(p1))
+			if dist > max_dist:
+				max_dist = dist
+				p3 = point
+
+	# Create a line equation from p3 that is perpendicular to the line between p1 and p2
+	slope_p1_p2 = (p2[1] - p1[1]) / (p2[0] - p1[0]) if p2[0] - p1[0] != 0 else float('inf')
+	if slope_p1_p2 == 0:
+		slope_perpendicular = float('inf')
+	elif slope_p1_p2 == float('inf'):
+		slope_perpendicular = 0
+	else:
+		slope_perpendicular = -1 / slope_p1_p2
+
+	# Using point-slope form to get the equation of the line passing through p3 and perpendicular to p1-p2 line
+	# Equation: y - y1 = m(x - x1), where (x1, y1) is p3
+	# y = mx - mx1 + y1
+	p3_perpendicular_y_intercept = p3[1] - slope_perpendicular * p3[0]
+
+	# Find p4, the next closest point to this perpendicular line after p3
+	p4 = None
+	min_distance_p3_to_p4 = float('inf')
+	for idx, point in enumerate(points):
+		if idx != max_distance_idx[0] and idx != max_distance_idx[1] and point != p3:
+			# Calculate perpendicular distance from the point to the line using point-to-line distance formula
+			distance = np.abs(slope_perpendicular * point[0] - point[1] + p3_perpendicular_y_intercept) / np.sqrt(
+				slope_perpendicular ** 2 + 1)
+			if distance < min_distance_p3_to_p4:
+				min_distance_p3_to_p4 = distance
+				p4 = point
+
+	distance_p1_to_p3 = np.linalg.norm(np.array(p1) - np.array(p3))
+	distance_p2_to_p3 = np.linalg.norm(np.array(p2) - np.array(p3))
+
+	if distance_p1_to_p3 < distance_p2_to_p3:
+		north = p1
+		south = p2
+		east = p3
+		west = p4
+	else:
+		north = p2
+		south = p1
+		west = p3
+		east = p4
+
+	return (north,east,south,west)
 
 if __name__ == "__main__":
 
 	#TASKS:
-	# REMOVE MATPLOTLIB USES, INSTEAD BUILD DIRECTLY OF PILLOW WITH LINES, MAKE THEM SMALL ENOUGH TO APPEAR SMOOTH AND FOLLOWING A SPLINE OF THE DRAWING
 	# Add ability to transform image of A4 paper to perfect dimensions with no distortion
+	#ALSO LET PEOPLE INPUT THEIR OWN X, Y REFERENCE FOR SIZE OF PAPER, SO IT CAN BE ANY SIZE BASED OF THE PAPER AS A REFERENCE
+	#Improve the smoothing of the drawings spline, try doing high resolution spline to smooth rather than straight to smooth from like 4 points
+	# 
 	path = "/home/benjamin/Documents/Projects/RAM/inputs/mine"
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
@@ -113,73 +181,77 @@ if __name__ == "__main__":
 		
 		drawing = load_image(file_path)
 
-		x_list,y_list = img2Outline(drawing)
+		outline, x_list, y_list = img2Outline(drawing)
 		try: LHole,RHole = img2hole(drawing)
 		except: print("Error: Please place two separate holes on the drawing.")
 
-		N_index = np.argmin(y_list)
-		E_index = np.argmax(x_list)
-		S_index = np.argmax(y_list)
-		W_index = np.argmin(x_list)
-		NX, NY = x_list[N_index], y_list[N_index]
-		EX, EY = x_list[E_index], y_list[E_index]
-		SX, SY = x_list[S_index], y_list[S_index]
-		WX, WY = x_list[W_index], y_list[W_index]
+		a4_x, a4_y = drawing.size 
+		pix2mmX, pix2mmY= 210/a4_x, 297/a4_y
 
-		#A4 conversion
-		A4_x, A4_y = 2480, 3508
-		pix2mmX, pix2mmY= 210/A4_x, 297/A4_y
+		north,east,south,west = compass(outline)
 
-		width = np.sqrt((EX - WX)**2 + (EY - WY)**2)
-		height = np.sqrt((NX - SX)**2 + (NY - SY)**2)
+
+		width = np.sqrt((east[0] - west[0])**2 + (east[1] - west[1])**2)
+		height = np.sqrt((north[0] - south[0])**2 + (north[1] - south[1])**2)
 
 		#Bottom holes
-		BottomY = SY - (height * 0.20)
-		tolerance = 4
+		BottomY = south[1] - (height * 0.20)
 		PixelGap = 75
+
+		tolerance = a4_y*0.15  # 15% tolerance on a4 y dimension
+
+		# Find indices of points within the tolerance of userY
 		indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
-		BLHole = x_list[indices_close[0]] + PixelGap
-		BRHole = x_list[indices_close[-1]] - PixelGap
+
+		BLHole = min(x_list[indices_close]) + PixelGap
+		BRHole = max(x_list[indices_close]) - PixelGap
 
 		#Middle holes
-		MidY = SY - (height * 0.45)
-		indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - MidY) < tolerance]
-		MLHole = x_list[indices_close[0]] + PixelGap
-		MRHole = x_list[indices_close[-1]] - PixelGap
-
-		##################### SETTINGS #####################
-		fig, ax = plt.subplots(figsize=(8.26772, 11.6929)) # A4 Paper
-		fig.tight_layout()
-		ax.axis('off')
+		MidY = south[1] - (height * 0.45)
+		indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
+		MLHole = min(x_list[indices_close]) + PixelGap
+		MRHole = max(x_list[indices_close]) - PixelGap
 
 		##################### IMAGE #####################
-		ax.imshow(drawing)
+		output_image = Image.new("RGB", (a4_x, a4_y), color="white")
+		draw = ImageDraw.Draw(output_image)
+
+		# Draw the polygon on the copied image
+		draw.line(outline, fill="blue", width=10)
 
 		##################### HEIGHT & WIDTH INFO #####################
-		ax.plot([NX, SX], [NY, SY], 'g--')
-		ax.plot([EX, WX], [EY, WY], 'r--')
-		ax.text(50, 150, f"Width = {np.around(width * pix2mmX)}mm", fontsize=7)
-		ax.text(50, 300, f"Height = {np.around(height * pix2mmY)}mm", fontsize=7)
+		draw.line(((north[0], north[1]),(south[0], south[1])), fill="green", width=10)
+		draw.line(((east[0], east[1]),(west[0], west[1])), fill="red", width=10)
 
+		font = ImageFont.truetype("DejaVuSans.ttf", 48)  # Change the font and size if needed
+
+		draw.text((50, 150),f"Width = {np.around(width * pix2mmX)}mm",fill="black", font=font)
+		draw.text((50, 300),f"Height = {np.around(height * pix2mmY)}mm",fill="black", font=font)
 
 		##################### OUTLINE & STITCHLINE #####################
-		ax.plot(x_list, y_list, linestyle='solid', linewidth=15, color='black')
-		ax.plot(x_list, y_list, linestyle='dotted', linewidth=2, color='white')
+		# ax.plot(x_list, y_list, linestyle='solid', linewidth=15, color='black')
+		# ax.plot(x_list, y_list, linestyle='dotted', linewidth=2, color='white')
 
 		##################### BOTTOM HOLES #####################
-		ax.plot([BLHole, BRHole],[BottomY, BottomY], "ro", markersize=10)
+		radius = 50
+		
+		draw.ellipse((BLHole - radius, BottomY - radius, BLHole + radius, BottomY + radius), fill="red")
+		draw.ellipse((BRHole - radius,BottomY - radius, BRHole + radius,BottomY + radius), fill="red")
 	
 		##################### BOTTOM MIDDLE HOLES #####################
-		ax.plot([(MLHole+BLHole)/2, (MRHole+BRHole)/2],[(MidY+BottomY)/2, (MidY+BottomY)/2], "ro", markersize=10)
+		draw.ellipse(((MLHole+BLHole)/2 - radius,(MidY+BottomY)/2 - radius, (MLHole+BLHole)/2 + radius,(MidY+BottomY)/2 + radius), fill="red")
+		draw.ellipse(((MRHole+BRHole)/2 - radius,(MidY+BottomY)/2 - radius, (MRHole+BRHole)/2 + radius,(MidY+BottomY)/2 + radius), fill="red")
 
-		##################### BOTTOM MIDDLE HOLES #####################
-		ax.plot([MLHole, MRHole],[MidY, MidY], "ro", markersize=10)
+		# ##################### BOTTOM MIDDLE HOLES #####################
+		draw.ellipse((MLHole - radius, MidY - radius, MLHole + radius, MidY + radius), fill="red")
+		draw.ellipse((MRHole - radius, MidY - radius, MRHole + radius, MidY + radius), fill="red")
 
-		##################### TOP HOLES #####################
-		ax.plot(LHole, RHole, "ro", markersize=10)
+		# ##################### TOP HOLES #####################
+		draw.ellipse((LHole[0] - radius, LHole[1] - radius, LHole[0] + radius, LHole[1] + radius), fill="red")
+		draw.ellipse((RHole[0] - radius, RHole[1] - radius, RHole[0] + radius, RHole[1] + radius), fill="red")
 
-
-		fig.savefig(f'{os.path.join(output_path, f"{jpg_file}")}', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
+		output_image.save(f'{os.path.join(output_path, f"{jpg_file}")}')
+		# fig.savefig(f'{os.path.join(output_path, f"{jpg_file}")}', dpi=300, bbox_inches='tight')  # Set dpi as needed (300 is standard for printing)
 		# plt.show()
 
 
