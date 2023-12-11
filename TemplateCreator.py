@@ -19,14 +19,11 @@ def load_image(file_path):
 
 
 def preprocess_image(image_path):
-	# Read the image
 	img = cv2.imread(image_path)
 	cv2.imwrite(os.path.join(output_path, "original.jpg"), img)
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-	# edges = cv2.Canny(blurred, 50, 150)
-
 	_, thresh = cv2.threshold(blurred, 80, 255, cv2.THRESH_BINARY)
 
 	kernel = np.ones((3, 3), np.uint8)
@@ -41,21 +38,30 @@ def preprocess_image(image_path):
 	epsilon = 0.04 * cv2.arcLength(contours[0], True)
 	approx = cv2.approxPolyDP(contours[0], epsilon, True)
 
+	rect = np.zeros((4, 2), dtype="float32")
+	s = approx.sum(axis=2)
+	rect[0] = approx[np.argmin(s)]
+	rect[2] = approx[np.argmax(s)]
+	diff = np.diff(approx, axis=2)
+	rect[1] = approx[np.argmin(diff)]
+	rect[3] = approx[np.argmax(diff)]
 
 	# Apply perspective transform to get a top-down view
-	paper_pts = np.float32([approx[1][0], approx[0][0], approx[3][0], approx[2][0]])
+	
 	width = 210  # A4 width in mm
 	height = 297  # A4 height in mm
-	dst_pts = np.float32([[0, 0], [width, 0], [width, height], [0, height]])
-	
-	matrix = cv2.getPerspectiveTransform(paper_pts, dst_pts)
+	dst_pts = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype="float32")
+	# Perform perspective transform
+	matrix = cv2.getPerspectiveTransform(rect, dst_pts)
 	warped = cv2.warpPerspective(img, matrix, (width, height))
 
-	# plt.subplot(121),plt.imshow(img,cmap = 'gray')
-	# plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	# plt.subplot(122),plt.imshow(warped,cmap = 'gray')
-	# plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
-	# plt.show()
+	# cv2.imwrite(os.path.join(output_path, "warped.jpg"), warped)
+	cv2.drawContours(img,approx, -1, (0,255,0), 10)
+	plt.subplot(121),plt.imshow(img,cmap = 'gray')
+	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+	plt.subplot(122),plt.imshow(warped,cmap = 'gray')
+	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+	plt.show()
 
 	cv2.imwrite(os.path.join(output_path, jpg_file), warped)
 	
@@ -105,6 +111,21 @@ def img2Outline(image):
 	grayscale_image = image.convert('L')
 	enhancer = ImageEnhance.Contrast(grayscale_image)
 	enhanced_image = enhancer.enhance(3)
+	
+	enhanced_image.save(os.path.join(output_path, f"enhanced_outline_{jpg_file}"))
+
+	img = cv2.imread(os.path.join(output_path, f"enhanced_outline_{jpg_file}"))
+	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+	_, thresh = cv2.threshold(gray, 175, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+				# cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
+
+	kernel = np.zeros((3, 3), np.uint8)
+
+	# Perform morphological operations (erosion followed by dilation)
+	thresh = cv2.erode(thresh, kernel, iterations=10)
+	# thresh = cv2.dilate(thresh, kernel, iterations=)
+
 	# width, height = image.size
 	# for x in range(width):
 	# 	for y in range(height):
@@ -115,31 +136,42 @@ def img2Outline(image):
 	# dilated_image = enhanced_image.filter(ImageFilter.MaxFilter(size=5))
 	# blurred_image = enhanced_image.filter(ImageFilter.GaussianBlur(radius=10))
 	# dilated_image = enhanced_image.filter(ImageFilter.MaxFilter(size=2))
-	threshold_image = enhanced_image.point(lambda p: 0 if p < 150 else 255, '1')
 
-	threshold_image.save(os.path.join(output_path, f"enhanced_outline_{jpg_file}"))
 
-	img = cv2.imread(os.path.join(output_path, f"enhanced_outline_{jpg_file}"))
-	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
-	contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	# gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	# blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+	# _, thresh = cv2.threshold(blurred, 80, 255, cv2.THRESH_BINARY)
 
-	epsilon = 0.005 * cv2.arcLength(contours[0], True)
-	poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
+	# kernel = np.ones((3, 3), np.uint8)
 
-	points = np.squeeze(poly_contour, axis=1)
-	points = np.vstack([points, points[0]])
-	x_list = points[:, 0]
-	y_list = points[:, 1]
-	xy_coords = [(x, y) for x, y in points]
+	# # Perform morphological operations (erosion followed by dilation)
+	# thresh = cv2.erode(thresh, kernel, iterations=15)
+	# thresh = cv2.dilate(thresh, kernel, iterations=15)
+	
+	# threshold_image = enhanced_image.point(lambda p: 0 if p < 150 else 255, '1')
+
+
+	# img = cv2.imread(os.path.join(output_path, f"enhanced_outline_{jpg_file}"))
+	# gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	# ret, im = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
+	# contours, hierarchy  = cv2.findContours(im, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+	# epsilon = 0.005 * cv2.arcLength(contours[0], True)
+	# poly_contour = cv2.approxPolyDP(contours[0], epsilon, True)
+
+	# points = np.squeeze(poly_contour, axis=1)
+	# points = np.vstack([points, points[0]])
+	# x_list = points[:, 0]
+	# y_list = points[:, 1]
+	# xy_coords = [(x, y) for x, y in points]
 	# tck, u = splprep(points.T, u=None, s=0, per=1)   # Spline fitting
 	# u_new = np.linspace(u.min(), u.max(), 1000)
 	# x_new, y_new = splev(u_new, tck, der=0)
 
-	contour_image = cv2.drawContours(img, poly_contour, -1, (255,255,0), 10)
-	plt.subplot(121),plt.imshow(threshold_image,cmap = 'gray')
+	# contour_image = cv2.drawContours(img, poly_contour, -1, (255,255,0), 10)
+	plt.subplot(121),plt.imshow(enhanced_image,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(enhanced_image,cmap = 'gray')
+	plt.subplot(122),plt.imshow(thresh,cmap = 'gray')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	plt.show()
 
@@ -213,7 +245,7 @@ if __name__ == "__main__":
 	#ALSO LET PEOPLE INPUT THEIR OWN X, Y REFERENCE FOR SIZE OF PAPER, SO IT CAN BE ANY SIZE BASED OF THE PAPER AS A REFERENCE
 	#Improve the smoothing of the drawings spline, try doing high resolution spline to smooth rather than straight to smooth from like 4 points
 	# 
-	path = "/home/benjamin/Documents/Projects/RAM/inputs/mum"
+	path = "/home/benjamin/Documents/Projects/RAM/inputs/zack"
 	files = os.listdir(path)
 	jpg_files = [file for file in files if file.lower().endswith('.jpg')]
 	scan = False
