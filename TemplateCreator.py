@@ -21,37 +21,36 @@ def load_image(file_path):
 def preprocess_image(image_path):
 	# Read the image
 	img = cv2.imread(image_path)
+
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	invGamma = 1.0 / 0.3
-	table = np.array([((i / 255.0) ** invGamma) * 255
-				  for i in np.arange(0, 256)]).astype("uint8")
-	gray = cv2.LUT(gray, table)
-	ret, thresh1 = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY)
-	contours, hierachy = cv2.findContours(thresh1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+	# edges = cv2.Canny(blurred, 50, 150)
 
-	def biggestRectangle(conts):
-		biggest = None
-		max_area = 0
-		indexReturn = -1
-		for index in range(len(conts)):
-			i = conts[index]
-			area = cv2.contourArea(i)
-			if area > 100:
-				peri = cv2.arcLength(i, True)
-				approx = cv2.approxPolyDP(i, 0.01 * peri, True)
-				if area > max_area and len(approx) == 4:
-					biggest = approx
-					max_area = area
-					indexReturn = index
-		return indexReturn
+	_, thresh = cv2.threshold(blurred, 80, 255, cv2.THRESH_BINARY)
 
-	indexReturn = biggestRectangle(contours)
-	hull = cv2.convexHull(contours[indexReturn])
-	cv2.drawContours(img, [hull], 0, (0, 255, 0), 3)
+	kernel = np.ones((3, 3), np.uint8)
 
-	plt.subplot(121),plt.imshow(img,cmap = 'gray')
+	# Perform morphological operations (erosion followed by dilation)
+	thresh = cv2.erode(thresh, kernel, iterations=15)
+	thresh = cv2.dilate(thresh, kernel, iterations=15)
+
+	contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Approximate the contours to find the corners
+	for contour in contours:
+		epsilon = 0.04 * cv2.arcLength(contour, True)
+		approx = cv2.approxPolyDP(contour, epsilon, True)
+
+		# If the contour has 4 corners (A4 paper), draw and display the corners
+		if len(approx) == 4:
+			cv2.drawContours(img, [approx], -1, (0, 255, 0), 2)
+			for point in approx:
+				x, y = point[0]
+				cv2.circle(img, (x, y), 5, (255, 0, 0), -1)
+
+	plt.subplot(121),plt.imshow(thresh,cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-	plt.subplot(122),plt.imshow(thresh1,cmap = 'gray')
+	plt.subplot(122),plt.imshow(img,cmap = 'gray')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 	plt.show()
 
