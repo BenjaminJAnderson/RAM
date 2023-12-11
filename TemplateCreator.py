@@ -101,7 +101,7 @@ def img2Outline(image):
 
 	return xy_coords, x_list, y_list
 
-def max_distance_indices(points):
+def compass(points):
 	points_array = np.array(points)
 	distances = np.linalg.norm(points_array[:, None] - points_array, axis=-1)
 	max_distance_idx = np.unravel_index(np.argmax(distances), distances.shape)
@@ -146,7 +146,21 @@ def max_distance_indices(points):
 				min_distance_p3_to_p4 = distance
 				p4 = point
 
-	return (p1,p2,p3,p4)
+	distance_p1_to_p3 = np.linalg.norm(np.array(p1) - np.array(p3))
+	distance_p2_to_p3 = np.linalg.norm(np.array(p2) - np.array(p3))
+
+	if distance_p1_to_p3 < distance_p2_to_p3:
+		north = p1
+		south = p2
+		east = p3
+		west = p4
+	else:
+		north = p2
+		south = p1
+		west = p3
+		east = p4
+
+	return (north,east,south,west)
 
 if __name__ == "__main__":
 
@@ -174,22 +188,14 @@ if __name__ == "__main__":
 		a4_x, a4_y = drawing.size 
 		pix2mmX, pix2mmY= 210/a4_x, 297/a4_y
 
-		p1,p2,p3,p4 = max_distance_indices(outline)
+		north,east,south,west = compass(outline)
 
-		N_index = np.argmin(y_list)
-		E_index = np.argmax(x_list)
-		S_index = np.argmax(y_list)
-		W_index = np.argmin(x_list)
-		NX, NY = x_list[N_index], y_list[N_index]
-		EX, EY = x_list[E_index], y_list[E_index]
-		SX, SY = x_list[S_index], y_list[S_index]
-		WX, WY = x_list[W_index], y_list[W_index]
 
-		width = np.sqrt((EX - WX)**2 + (EY - WY)**2)
-		height = np.sqrt((NX - SX)**2 + (NY - SY)**2)
+		width = np.sqrt((east[0] - west[0])**2 + (east[1] - west[1])**2)
+		height = np.sqrt((north[0] - south[0])**2 + (north[1] - south[1])**2)
 
 		#Bottom holes
-		BottomY = SY - (height * 0.20)
+		BottomY = south[1] - (height * 0.20)
 		PixelGap = 75
 
 		tolerance = a4_y*0.15  # 15% tolerance on a4 y dimension
@@ -201,7 +207,7 @@ if __name__ == "__main__":
 		BRHole = max(x_list[indices_close]) - PixelGap
 
 		#Middle holes
-		MidY = SY - (height * 0.45)
+		MidY = south[1] - (height * 0.45)
 		indices_close = [i for i, y_val in enumerate(y_list) if abs(y_val - BottomY) < tolerance]
 		MLHole = min(x_list[indices_close]) + PixelGap
 		MRHole = max(x_list[indices_close]) - PixelGap
@@ -214,8 +220,8 @@ if __name__ == "__main__":
 		draw.line(outline, fill="blue", width=10)
 
 		##################### HEIGHT & WIDTH INFO #####################
-		draw.line(((p1[0], p1[1]),(p2[0], p2[1])), fill="green", width=10)
-		draw.line(((p3[0], p3[1]),(p4[0], p4[1])), fill="red", width=10)
+		draw.line(((north[0], north[1]),(south[0], south[1])), fill="green", width=10)
+		draw.line(((east[0], east[1]),(west[0], west[1])), fill="red", width=10)
 
 		font = ImageFont.truetype("DejaVuSans.ttf", 48)  # Change the font and size if needed
 
