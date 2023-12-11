@@ -53,11 +53,11 @@ def preprocess_image(image_path):
 	dst_pts = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype="float32")
 	# Perform perspective transform
 	matrix = cv2.getPerspectiveTransform(rect, dst_pts)
-	warped = cv2.warpPerspective(img, matrix, (width, height))
+	warped = cv2.warpPerspective(thresh, matrix, (width, height))
 
 	# cv2.imwrite(os.path.join(output_path, "warped.jpg"), warped)
 	cv2.drawContours(img,approx, -1, (0,255,0), 10)
-	plt.subplot(121),plt.imshow(img,cmap = 'gray')
+	plt.subplot(121),plt.imshow(thresh, cmap = 'gray')
 	plt.title('Original Image'), plt.xticks([]), plt.yticks([])
 	plt.subplot(122),plt.imshow(warped,cmap = 'gray')
 	plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
