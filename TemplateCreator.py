@@ -109,33 +109,35 @@ def max_distance_indices(points):
 	p1 = points[max_distance_idx[0]]
 	p2 = points[max_distance_idx[1]]
 	
-	# Find p3 (farthest point from the line between p1 & p2)
-	# Using vector mathematics to calculate distance from each point to the line
-	vec_p1p2 = np.array(p2) - np.array(p1)
-	distances_from_line = np.abs(np.cross(np.array(points) - np.array(p1), vec_p1p2) / np.linalg.norm(vec_p1p2))
-	max_distance_from_line_idx = np.argmax(distances_from_line)
-	p3 = points[max_distance_from_line_idx]
+	# Finding p3, farthest point from line formed by p1 and p2
+	p3 = None
+	max_dist = -1
+	for idx, point in enumerate(points):
+		if idx != max_distance_idx[0] and idx != max_distance_idx[1]:
+			dist = np.abs(np.cross(np.array(p2) - np.array(p1), np.array(point) - np.array(p1))) / np.linalg.norm(
+				np.array(p2) - np.array(p1))
+			if dist > max_dist:
+				max_dist = dist
+				p3 = point
 
-	# Find the perpendicular line passing through p3
-	a, b = -vec_p1p2[1], vec_p1p2[0]
-	c = -(a * p3[0] + b * p3[1])
+	# Create a line equation perpendicular to the line between p1 and p2 from p3
+	slope = -(p2[0] - p1[0]) / (p2[1] - p1[1])  # Slope of the perpendicular line
+	# Using point-slope form: y - y1 = m * (x - x1)
+	# x1, y1 is the point p3
+	# Calculate y-intercept using y = mx + c -> c = y - mx
+	c = p3[1] - slope * p3[0]
 
-	# Check which side of the line each point lies on
-	side_of_line = np.sign(a * np.array(points)[:, 0] + b * np.array(points)[:, 1] + c)
-	
-	# Filter points on the opposite side of p1 & p2 for p4 calculation
-	opposite_side_idx = np.where(side_of_line != side_of_line[max_distance_from_line_idx])[0]
-	distances_to_perpendicular = np.abs(a * np.array(points)[opposite_side_idx, 0] + b * np.array(points)[opposite_side_idx, 1] + c) / np.sqrt(a**2 + b**2)
-	
-	# Find the closest point to the perpendicular line on the opposite side
-	closest_to_perpendicular_idx = opposite_side_idx[np.argmin(distances_to_perpendicular)]
-	p4 = points[closest_to_perpendicular_idx]
+	# Find the next closest point to this perpendicular line after p3 (renamed as p4)
+	p4 = None
+	min_distance = float('inf')
+	for point in points:
+		# Calculate distance from the point to the perpendicular line
+		distance = np.abs(slope * point[0] - point[1] + c) / np.sqrt(slope ** 2 + 1)
+		if distance < min_distance and np.dot(np.array(p2) - np.array(p1), np.array(point) - np.array(p3)) > 0:
+			# Dot product to check if the point is after p3 on the line
+			min_distance = distance
+			p4 = point
 
-	# print(p1,p2,p3,p4)
-	# print(distances_from_line)
-	print(max_distance_from_line_idx)
-	print(p3)
-	print(distances_to_perpendicular)
 	return (p1,p2,p3,p4)
 
 if __name__ == "__main__":
