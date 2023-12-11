@@ -112,17 +112,20 @@ def max_distance_indices(points):
 	line_vector = np.array(p2) - np.array(p1)
 
 	line_vector_norm = line_vector / np.linalg.norm(line_vector)
+	
+	# Find the equation of the line passing through p1 and p2: ax + by + c = 0
+	a = p2[1] - p1[1]
+	b = p1[0] - p2[0]
+	c = p2[0] * p1[1] - p1[0] * p2[1]
 
-	perpendicular_distances = []
-	for point in points_array:
-		vec_from_p1 = point - p1
-		projection = np.dot(vec_from_p1, line_vector_norm) * line_vector_norm
-		perpendicular_distances.append(np.linalg.norm(vec_from_p1 - projection))
+	# Calculate the distance of each point from the line
+	distances_from_line = np.abs(a * points_array[:, 0] + b * points_array[:, 1] + c) / np.sqrt(a**2 + b**2)
 
-	# Get the indices of the points with the maximum perpendicular distance
-	max_perpendicular_idx = np.argsort(perpendicular_distances)[-2:]  # Two largest indices
-	p3 = points[max_perpendicular_idx[0]]
-	p4 = points[max_perpendicular_idx[1]]
+	# Find the indices of the points with maximum distance from the line
+	max_dist_indices = np.argsort(distances_from_line)[-2:]  # Get indices of two farthest points
+
+	p3 = points[max_dist_indices[0]]
+	p4 = points[max_dist_indices[1]]
 	
 	return (p1,p2,p3,p4)
 
@@ -193,7 +196,7 @@ if __name__ == "__main__":
 
 		##################### HEIGHT & WIDTH INFO #####################
 		draw.line(((p1[0], p1[1]),(p2[0], p2[1])), fill="green", width=10)
-		# draw.line(((EX, WX),(EY, WY)), fill="red", width=10)
+		draw.line(((p3[0], p3[1]),(p4[0], p4[1])), fill="red", width=10)
 
 		font = ImageFont.truetype("DejaVuSans.ttf", 48)  # Change the font and size if needed
 
