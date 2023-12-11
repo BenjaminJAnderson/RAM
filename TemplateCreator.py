@@ -120,23 +120,31 @@ def max_distance_indices(points):
 				max_dist = dist
 				p3 = point
 
-	# Create a line equation perpendicular to the line between p1 and p2 from p3
-	slope = -(p2[0] - p1[0]) / (p2[1] - p1[1])  # Slope of the perpendicular line
-	# Using point-slope form: y - y1 = m * (x - x1)
-	# x1, y1 is the point p3
-	# Calculate y-intercept using y = mx + c -> c = y - mx
-	c = p3[1] - slope * p3[0]
+	# Create a line equation from p3 that is perpendicular to the line between p1 and p2
+	slope_p1_p2 = (p2[1] - p1[1]) / (p2[0] - p1[0]) if p2[0] - p1[0] != 0 else float('inf')
+	if slope_p1_p2 == 0:
+		slope_perpendicular = float('inf')
+	elif slope_p1_p2 == float('inf'):
+		slope_perpendicular = 0
+	else:
+		slope_perpendicular = -1 / slope_p1_p2
 
-	# Find the next closest point to this perpendicular line after p3 (renamed as p4)
+	# Using point-slope form to get the equation of the line passing through p3 and perpendicular to p1-p2 line
+	# Equation: y - y1 = m(x - x1), where (x1, y1) is p3
+	# y = mx - mx1 + y1
+	p3_perpendicular_y_intercept = p3[1] - slope_perpendicular * p3[0]
+
+	# Find p4, the next closest point to this perpendicular line after p3
 	p4 = None
-	min_distance = float('inf')
-	for point in points:
-		# Calculate distance from the point to the perpendicular line
-		distance = np.abs(slope * point[0] - point[1] + c) / np.sqrt(slope ** 2 + 1)
-		if distance < min_distance and np.dot(np.array(p2) - np.array(p1), np.array(point) - np.array(p3)) > 0:
-			# Dot product to check if the point is after p3 on the line
-			min_distance = distance
-			p4 = point
+	min_distance_p3_to_p4 = float('inf')
+	for idx, point in enumerate(points):
+		if idx != max_distance_idx[0] and idx != max_distance_idx[1] and point != p3:
+			# Calculate perpendicular distance from the point to the line using point-to-line distance formula
+			distance = np.abs(slope_perpendicular * point[0] - point[1] + p3_perpendicular_y_intercept) / np.sqrt(
+				slope_perpendicular ** 2 + 1)
+			if distance < min_distance_p3_to_p4:
+				min_distance_p3_to_p4 = distance
+				p4 = point
 
 	return (p1,p2,p3,p4)
 
