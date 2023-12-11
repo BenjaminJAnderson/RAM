@@ -108,36 +108,32 @@ def max_distance_indices(points):
 
 	p1 = points[max_distance_idx[0]]
 	p2 = points[max_distance_idx[1]]
-
-	line_vector = np.array(p2) - np.array(p1)
-
-	line_vector_norm = line_vector / np.linalg.norm(line_vector)
 	
+	# Calculate the line equation between p1 and p2 (y = mx + c)
+	m = (p2[1] - p1[1]) / (p2[0] - p1[0])  # Slope of the line
+	c = p1[1] - m * p1[0]  # Intercept of the line
+
+	# Initialize p3 and p4 to None and maximum distances to the left and right respectively
 	p3 = None
 	p4 = None
 	max_dist_left = -np.inf
 	max_dist_right = -np.inf
 
 	for point in points:
-		if not np.array_equal(point, p1) and not np.array_equal(point, p2):
-			# Vector from p1 to the current point
-			vector_to_point = np.array(point) - np.array(p1)
-			
-			# Calculate cross product to determine position relative to the line
-			cross_product = np.cross(line_vector_norm, vector_to_point)
-			
-			# If cross product is negative, the point is to the left of the line
-			if cross_product < 0:
-				distance_left = np.abs(np.dot(line_vector_norm, vector_to_point))
-				if distance_left > max_dist_left:
-					max_dist_left = distance_left
-					p3 = point
-			# If cross product is positive, the point is to the right of the line
-			elif cross_product > 0:
-				distance_right = np.abs(np.dot(line_vector_norm, vector_to_point))
-				if distance_right > max_dist_right:
-					max_dist_right = distance_right
-					p4 = point
+		# Calculate perpendicular distance of each point from the line
+		dist = abs(-m * point[0] + point[1] - c) / np.sqrt(m**2 + 1)
+
+		# Determine if the point is to the left or right of the line
+		# Check left side
+		if (point[0] < p1[0] and point[0] < p2[0]) or (point[0] > p1[0] and point[0] > p2[0]):
+			if dist > max_dist_left:
+				max_dist_left = dist
+				p3 = point
+		# Check right side
+		else:
+			if dist > max_dist_right:
+				max_dist_right = dist
+				p4 = point
 	
 	return (p1,p2,p3,p4)
 
